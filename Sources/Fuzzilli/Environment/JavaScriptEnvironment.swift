@@ -165,7 +165,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
             registerObjectGroup(.jsTypedArrays(variant))
         }
-        registerObjectGroup(.jsDataViews)
+        // registerObjectGroup(.jsDataViews)
 
         registerObjectGroup(.jsObjectConstructor)
         registerObjectGroup(.jsPromiseConstructor)
@@ -176,8 +176,8 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         registerObjectGroup(.jsBooleanConstructor)
         registerObjectGroup(.jsNumberConstructor)
         registerObjectGroup(.jsMathObject)
-        registerObjectGroup(.jsDate)
-        registerObjectGroup(.jsDateConstructor)
+        // registerObjectGroup(.jsDate)
+        // registerObjectGroup(.jsDateConstructor)
         registerObjectGroup(.jsJSONObject)
         registerObjectGroup(.jsReflectObject)
         registerObjectGroup(.jsArrayBufferConstructor)
@@ -211,8 +211,8 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
             registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
         }
-        registerBuiltin("DataView", ofType: .jsDataViewConstructor)
-        registerBuiltin("Date", ofType: .jsDateConstructor)
+        // registerBuiltin("DataView", ofType: .jsDataViewConstructor)
+        // registerBuiltin("Date", ofType: .jsDateConstructor)
         registerBuiltin("Promise", ofType: .jsPromiseConstructor)
         registerBuiltin("Proxy", ofType: .jsProxyConstructor)
         registerBuiltin("Map", ofType: .jsMapConstructor)

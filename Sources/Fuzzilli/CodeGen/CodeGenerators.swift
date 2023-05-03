@@ -105,7 +105,7 @@ public let CodeGenerators: [CodeGenerator] = [
     },
 
     ValueGenerator("BuiltinObjectInstanceGenerator") { b, n in
-        let builtin = chooseUniform(from: ["Array", "Map", "WeakMap", "Set", "WeakSet", "Date"])
+        let builtin = chooseUniform(from: ["Array", "Map", "WeakMap", "Set", "WeakSet"])
         let constructor = b.loadBuiltin(builtin)
         if builtin == "Array" {
             let size = b.loadInt(b.randomSize(upTo: 0x1000))

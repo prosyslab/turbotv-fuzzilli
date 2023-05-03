@@ -83,6 +83,12 @@ public struct Expression: CustomStringConvertible {
         return type.precedence < other.type.precedence
     }
 
+    func change_text(text: String) -> Expression{
+        return Expression(type: type,
+                          text: text,
+                          numSubexpressions: numSubexpressions)
+    }
+
     func extended(by part: String) -> Expression {
         return Expression(type: type,
                           text: text + part,
