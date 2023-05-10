@@ -790,8 +790,6 @@ public class JavaScriptLifter: Lifter {
 
             case .unaryOperation(let op):
                 let input = input(0)
-                // print("input: \(input)")
-                // print("instr.input \(instr.input(0))")
                 let expr: Expression
                 if op.op.isPostfix {
                     expr = UnaryExpression.new() + input + op.op.token
@@ -816,14 +814,7 @@ public class JavaScriptLifter: Lifter {
             case .reassign:
                 let dest = input(0)
                 assert(dest.type === Identifier)
-                // let expr = AssignmentExpression.new() + dest + " = " + input(1)
-                let expr: Expression;
-                // prevent paramter overwriting
-                if (instr.input(0).number <= 1) {
-                    expr = AssignmentExpression.new() + "v\(instr.input(0).number)" + input(1)
-                } else {
-                    expr = AssignmentExpression.new() + input(0) + input(1)
-                }
+                let expr = AssignmentExpression.new() + dest + " = " + input(1)
                 w.reassign(instr.input(0), to: expr)
 
             case .update(let op):
@@ -1282,6 +1273,7 @@ public class JavaScriptLifter: Lifter {
         if (program.code.count >= 1 &&  w.getCurrentIndention() == 0) {
             if let retvar = find_last_output() {
                 w.emit("return \(retvar);")
+                // w.emit("return p0;")
             }
         }
 
@@ -1531,13 +1523,14 @@ public class JavaScriptLifter: Lifter {
                 // The expression cannot be inlined. Now decide whether to define the output variable or not. The output variable can be omitted if:
                 //  * It is not used by any following instructions, and
                 //  * It is not an Object literal, as that would not be valid syntax (it would mistakenly be interpreted as a block statement)
-                if analyzer.numUses(of: v) == 0 && expr.type !== ObjectLiteral {
-                    emit("\(expr);")
-                } else {
+                // Patch: Even there are no uses, emit
+                // if analyzer.numUses(of: v) == 0 && expr.type !== ObjectLiteral {
+                //     emit("\(expr);")
+                // } else {
                     let LET = declarationKeyword(for: v)
                     let V = declare(v)
                     emit("\(LET) \(V) = \(expr);")
-                }
+                // }
             }
         }
 
@@ -1652,7 +1645,7 @@ public class JavaScriptLifter: Lifter {
                     if expression.text.starts(with: "v"){
                         if let idx = Int(expression.text[expression.text.index(after: expression.text.startIndex)...]){
                             // change here to adjust parameter frequency
-                            if idx <= 5 {
+                            if idx <= 1 {
                                 return expression.change_text(text: "p\(idx%2)")
                             }
                         }
@@ -1713,13 +1706,7 @@ public class JavaScriptLifter: Lifter {
         @discardableResult
         mutating func declare(_ v: Variable, as maybeName: String? = nil) -> String {
             assert(!expressions.contains(v))
-            let name = {
-                // prevent parameter re-declaration
-                if v.number <= 1 {
-                    return maybeName ?? "v" + String(v.number+2)
-                } else {
-                    return maybeName ?? "v" + String(v.number)
-                }}()
+            let name = maybeName ?? "v" + String(v.number)
             expressions[v] = Identifier.new(name)
             return name
         }
@@ -1841,17 +1828,20 @@ public class JavaScriptLifter: Lifter {
                 // Reassignments require special handling: there is already a variable declared for the lhs,
                 // so we only need to emit the AssignmentExpression as an expression statement.
                 writer.emit("\(EXPR);")
-            } else if analyzer.numUses(of: v) > 0 {
+            // patch
+            // } else if analyzer.numUses(of: v) > 0 {
+            } else {
                 let LET = declarationKeyword(for: v)
-                let V = declare(v)
+                let V: String = declare(v)
                 // Need to use writer.emit instead of emit here as the latter will emit all pending expressions.
                 writer.emit("\(LET) \(V) = \(EXPR);")
-            } else {
-                // Pending expressions with no uses are allowed and are for example necessary to be able to
-                // combine multiple expressions into a single comma-expression for e.g. a loop header.
-                // See the loop header lifting code and tests for examples.
-                writer.emit("\(EXPR);")
             }
+            // } else {
+            //     // Pending expressions with no uses are allowed and are for example necessary to be able to
+            //     // combine multiple expressions into a single comma-expression for e.g. a loop header.
+            //     // See the loop header lifting code and tests for examples.
+            //     writer.emit("\(EXPR);")
+            // }
         }
 
         /// When a pending expression is used (either emitted or attached to another expression), it should be removed from the list of

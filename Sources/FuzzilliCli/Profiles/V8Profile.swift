@@ -410,16 +410,7 @@ let v8Profile = Profile(
             "--allow-natives-syntax",
             "--fuzzing",
             "--jit-fuzzing",
-            "--future",
-            "--harmony"
         ]
-
-        guard randomize else { return args }
-
-        if probability(0.25) {
-            args.append("--turboshaft")
-        }
-
         return args
     },
 
@@ -490,14 +481,12 @@ let v8Profile = Profile(
 
     codeSuffix: """
      }
-    let jit_a0 = opt(1, 2);
-    opt(true, -0.0);
-    let jit_a0_0 = opt(1, 2);
+    let jit_a0 = opt(1, 0);
+    let jit_a0_0 = opt(1, 0);
     %PrepareFunctionForOptimization(opt);
-    let jit_a0_1 = opt(1, 2);
-    opt(0.5, 3);
+    let jit_a0_1 = opt(1, 0);
     %OptimizeFunctionOnNextCall(opt)
-    let jit_a2 = opt(1, 2);
+    let jit_a2 = opt(1, 0);
     if (jit_a0 === undefined && jit_a2 === undefined){
         opt(1, 2);
     } else if (deepEquals(jit_a0, jit_a0_0) && deepEquals(jit_a0, jit_a0_1) && !deepEquals(jit_a0, jit_a2)) {
@@ -511,10 +500,147 @@ let v8Profile = Profile(
 
     additionalCodeGenerators: [],
 
-    additionalProgramTemplates: WeightedList<ProgramTemplate>([
-    ]),
+    additionalProgramTemplates: WeightedList<ProgramTemplate>([]),
 
-    disabledCodeGenerators: [],
+    // disable generators that generates not targeted operators by TurboTV.
+    disabledCodeGenerators: [
+        // Loop
+        "WhileLoopGenerator",
+        "DoWhileLoopGenerator",
+        "SimpleForLoopGenerator",
+        "ComplexForLoopGenerator",
+        "ForInLoopGenerator",
+        "ForOfLoopGenerator",
+        "ForOfWithDestructLoopGenerator",
+        "RepeatLoopGenerator",
+        "LoopBreakGenerator",
+        "ContinueGenerator",
+
+        // Asynchronous
+        "AsyncFunctionGenerator",
+        "AsyncArrowFunctionGenerator",
+        "AsyncGeneratorFunctionGenerator",
+        "AwaitGenerator",
+        "PromiseGenerator",
+
+        // Computed
+        "ComputedPropertyRetrievalGenerator",
+        "ComputedPropertyAssignmentGenerator",
+        "StoreComputedPropertyWithBinopGenerator",
+        "ComputedPropertyRemovalGenerator",
+        "ComputedPropertyConfigurationGenerator",
+        "ComputedMethodCallGenerator",
+        "ComputedMethodCallWithSpreadGenerator",
+        "ComputedPropertyUpdateGenerator",
+
+        // Well-known property access
+        "WellKnownPropertyLoadGenerator",
+        "WellKnownPropertyStoreGenerator",
+        "PrototypeAccessGenerator",
+        "PrototypeOverwriteGenerator",
+
+        // Class
+        "ClassGenerator",
+        "ClassConstructorGenerator",
+        "ClassDefinitionGenerator",
+        "ClassInstanceComputedPropertyGenerator",
+        "ClassInstanceElementGenerator",
+        "ClassInstanceGetterGenerator",
+        "ClassInstanceMethodGenerator",
+        "ClassInstancePropertyGenerator",
+        "ClassInstanceSetterGenerator",
+        "ClassPrivateInstanceMethodGenerator",
+        "ClassPrivateInstancePropertyGenerator",
+        "ClassPrivateStaticMethodGenerator",
+        "ClassPrivateStaticPropertyGenerator",
+        "ClassStaticComputedPropertyGenerator",
+        "ClassStaticElementGenerator",
+        "ClassStaticGetterGenerator",
+        "ClassStaticInitializerGenerator",
+        "ClassStaticMethodGenerator",
+        "ClassStaticPropertyGenerator",
+        "ClassStaticSetterGenerator",
+        "PrivateMethodCallGenerator",
+        "PrivatePropertyAssignmentGenerator",
+        "PrivatePropertyRetrievalGenerator",
+        "PrivatePropertyUpdateGenerator",
+        // "MethodCallGenerator", required for 1404607, 1323114
+        "MethodCallWithSpreadGenerator",
+        "ConstructorCallGenerator",
+        "ConstructorCallWithSpreadGenerator",
+        // "ConstructorGenerator",  required for 1404607
+        "SuperMethodCallGenerator",
+        "LoadSuperPropertyGenerator",
+        "SuperPropertyAssignmentGenerator",
+        "SuperPropertyRetrievalGenerator",
+        "SuperPropertyUpdateGenerator",
+        "ThisGenerator",
+
+        // Object
+        "BuiltinObjectInstanceGenerator",
+        "ObjectWithSpreadGenerator",
+        "ObjectBuilderFunctionGenerator",
+        "ObjectConstructorGenerator",
+        "ObjectLiteralComputedMethodGenerator",
+        "ObjectLiteralComputedPropertyGenerator",
+        "ObjectLiteralCopyPropertiesGenerator",
+        // "ObjectLiteralElementGenerator",
+        // "ObjectLiteralGenerator",
+        "ObjectLiteralGetterGenerator",
+        "ObjectLiteralMethodGenerator",
+        "ObjectLiteralPropertyGenerator",
+        "ObjectLiteralPrototypeGenerator",
+        "ObjectLiteralSetterGenerator",
+        "DestructObjectAndReassignGenerator",
+        "DestructObjectGenerator",
+        // "PropertyAssignmentGenerator", required for 1323114
+        "PropertyUpdateGenerator",
+        "PropertyConfigurationGenerator",
+        "PropertyRemovalGenerator",
+        "PropertyRetrievalGenerator",
+
+        // RegExp
+        "RegExpGenerator",
+
+        // Function
+        "TrivialFunctionGenerator",
+        "ArrowFunctionGenerator",
+        "GeneratorFunctionGenerator",
+
+        // Symbol-related
+        "IteratorGenerator",
+
+        // Misc
+        "TypedArrayGenerator",
+        "ImitationGenerator",
+        "ResizableArrayBufferGenerator",
+        "DestructArrayAndReassignGenerator",
+        "DestructArrayGenerator",
+        "GrowableSharedArrayBufferGenerator",
+        "FunctionCallWithSpreadGenerator",
+        "CallbackPropertyGenerator",
+        "TryCatchGenerator",
+        "ThrowGenerator",
+        "YieldGenerator",
+        "TypeTestGenerator",
+        "ArrayWithSpreadGenerator",
+        "TemplateStringGenerator",
+        "StringNormalizeGenerator",
+        "InstanceOfGenerator",
+        "InGenerator",
+        "MethodCallWithDifferentThisGenerator",
+        "ProxyGenerator",
+        "LengthChangeGenerator",
+        "EvalGenerator",
+        "JITFunctionGenerator",
+        "WithStatementGenerator",
+        "ElementAssignmentGenerator",
+        "ElementConfigurationGenerator",
+        "ElementKindChangeGenerator",
+        "ElementRemovalGenerator",
+        "ElementRetrievalGenerator",
+        "WeirdClassGenerator",
+        ],
 
     additionalBuiltins: [:]
 )

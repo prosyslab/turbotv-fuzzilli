@@ -149,42 +149,42 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         registerObjectGroup(.jsStrings)
         registerObjectGroup(.jsArrays)
         registerObjectGroup(.jsArguments)
-        registerObjectGroup(.jsGenerators)
-        registerObjectGroup(.jsPromises)
-        registerObjectGroup(.jsRegExps)
+        // registerObjectGroup(.jsGenerators)
+        // registerObjectGroup(.jsPromises)
+        // registerObjectGroup(.jsRegExps)
         registerObjectGroup(.jsFunctions)
-        registerObjectGroup(.jsSymbols)
-        registerObjectGroup(.jsMaps)
-        registerObjectGroup(.jsWeakMaps)
-        registerObjectGroup(.jsSets)
-        registerObjectGroup(.jsWeakSets)
-        registerObjectGroup(.jsWeakRefs)
-        registerObjectGroup(.jsFinalizationRegistrys)
+        // registerObjectGroup(.jsSymbols)
+        // registerObjectGroup(.jsMaps)
+        // registerObjectGroup(.jsWeakMaps)
+        // registerObjectGroup(.jsSets)
+        // registerObjectGroup(.jsWeakSets)
+        // registerObjectGroup(.jsWeakRefs)
+        // registerObjectGroup(.jsFinalizationRegistrys)
         registerObjectGroup(.jsArrayBuffers)
-        registerObjectGroup(.jsSharedArrayBuffers)
+        // registerObjectGroup(.jsSharedArrayBuffers)
         for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
             registerObjectGroup(.jsTypedArrays(variant))
         }
         // registerObjectGroup(.jsDataViews)
 
         registerObjectGroup(.jsObjectConstructor)
-        registerObjectGroup(.jsPromiseConstructor)
+        // registerObjectGroup(.jsPromiseConstructor)
         registerObjectGroup(.jsArrayConstructor)
         registerObjectGroup(.jsStringConstructor)
-        registerObjectGroup(.jsSymbolConstructor)
+        // registerObjectGroup(.jsSymbolConstructor)
         registerObjectGroup(.jsBigIntConstructor)
         registerObjectGroup(.jsBooleanConstructor)
         registerObjectGroup(.jsNumberConstructor)
         registerObjectGroup(.jsMathObject)
         // registerObjectGroup(.jsDate)
         // registerObjectGroup(.jsDateConstructor)
-        registerObjectGroup(.jsJSONObject)
-        registerObjectGroup(.jsReflectObject)
+        // registerObjectGroup(.jsJSONObject)
+        // registerObjectGroup(.jsReflectObject)
         registerObjectGroup(.jsArrayBufferConstructor)
-        registerObjectGroup(.jsSharedArrayBufferConstructor)
-        for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError", "URIError"] {
-            registerObjectGroup(.jsError(variant))
-        }
+        // registerObjectGroup(.jsSharedArrayBufferConstructor)
+        // for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError", "URIError"] {
+        //     registerObjectGroup(.jsError(variant))
+        // }
 
         for group in additionalObjectGroups {
             registerObjectGroup(group)
@@ -200,30 +200,30 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         registerBuiltin("String", ofType: .jsStringConstructor)
         registerBuiltin("Boolean", ofType: .jsBooleanConstructor)
         registerBuiltin("Number", ofType: .jsNumberConstructor)
-        registerBuiltin("Symbol", ofType: .jsSymbolConstructor)
+        // registerBuiltin("Symbol", ofType: .jsSymbolConstructor)
         registerBuiltin("BigInt", ofType: .jsBigIntConstructor)
-        registerBuiltin("RegExp", ofType: .jsRegExpConstructor)
-        for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError", "URIError"] {
-            registerBuiltin(variant, ofType: .jsErrorConstructor(variant))
-        }
+        // registerBuiltin("RegExp", ofType: .jsRegExpConstructor)
+        // for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError", "URIError"] {
+        //     registerBuiltin(variant, ofType: .jsErrorConstructor(variant))
+        // }
         registerBuiltin("ArrayBuffer", ofType: .jsArrayBufferConstructor)
-        registerBuiltin("SharedArrayBuffer", ofType: .jsSharedArrayBufferConstructor)
+        // registerBuiltin("SharedArrayBuffer", ofType: .jsSharedArrayBufferConstructor)
         for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
             registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
         }
-        // registerBuiltin("DataView", ofType: .jsDataViewConstructor)
+        registerBuiltin("DataView", ofType: .jsDataViewConstructor)
         // registerBuiltin("Date", ofType: .jsDateConstructor)
-        registerBuiltin("Promise", ofType: .jsPromiseConstructor)
-        registerBuiltin("Proxy", ofType: .jsProxyConstructor)
-        registerBuiltin("Map", ofType: .jsMapConstructor)
-        registerBuiltin("WeakMap", ofType: .jsWeakMapConstructor)
-        registerBuiltin("Set", ofType: .jsSetConstructor)
-        registerBuiltin("WeakSet", ofType: .jsWeakSetConstructor)
-        registerBuiltin("WeakRef", ofType: .jsWeakRefConstructor)
-        registerBuiltin("FinalizationRegistry", ofType: .jsFinalizationRegistryConstructor)
+        // registerBuiltin("Promise", ofType: .jsPromiseConstructor)
+        // registerBuiltin("Proxy", ofType: .jsProxyConstructor)
+        // registerBuiltin("Map", ofType: .jsMapConstructor)
+        // registerBuiltin("WeakMap", ofType: .jsWeakMapConstructor)
+        // registerBuiltin("Set", ofType: .jsSetConstructor)
+        // registerBuiltin("WeakSet", ofType: .jsWeakSetConstructor)
+        // registerBuiltin("WeakRef", ofType: .jsWeakRefConstructor)
+        // registerBuiltin("FinalizationRegistry", ofType: .jsFinalizationRegistryConstructor)
         registerBuiltin("Math", ofType: .jsMathObject)
-        registerBuiltin("JSON", ofType: .jsJSONObject)
-        registerBuiltin("Reflect", ofType: .jsReflectObject)
+        // registerBuiltin("JSON", ofType: .jsJSONObject)
+        // registerBuiltin("Reflect", ofType: .jsReflectObject)
         registerBuiltin("isNaN", ofType: .jsIsNaNFunction)
         registerBuiltin("isFinite", ofType: .jsIsFiniteFunction)
         //registerBuiltin("escape:", ofType: .jsEscapeFunction)
@@ -232,7 +232,8 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         //registerBuiltin("decodeURIComponent:", ofType: .jsDecodeURIComponentFunction)
         //registerBuiltin("encodeURI:", ofType: .jsEncodeURIFunction)
         //registerBuiltin("encodeURIComponent:", ofType: .jsEncodeURIComponentFunction)
-        registerBuiltin("eval", ofType: .jsEvalFunction)
+        // registerBuiltin("eval", ofType: .jsEvalFunction)
+
         registerBuiltin("parseInt", ofType: .jsParseIntFunction)
         registerBuiltin("parseFloat", ofType: .jsParseFloatFunction)
         registerBuiltin("undefined", ofType: .jsUndefined)
@@ -499,7 +500,9 @@ public extension JSType {
     static let jsFinalizationRegistryConstructor = JSType.constructor([.function()] => .jsFinalizationRegistry)
 
     /// Type of the JavaScript Math constructor builtin.
-    static let jsMathObject = JSType.object(ofGroup: "Math", withProperties: ["E", "PI"], withMethods: ["abs", "acos", "acosh", "asin", "asinh", "atan", "atanh", "atan2", "ceil", "cbrt", "expm1", "clz32", "cos", "cosh", "exp", "floor", "fround", "hypot", "imul", "log", "log1p", "log2", "log10", "max", "min", "pow", "random", "round", "sign", "sin", "sinh", "sqrt", "tan", "tanh", "trunc"])
+    // static let jsMathObject = JSType.object(ofGroup: "Math", withProperties: ["E", "PI"], withMethods: ["abs", "acos", "acosh", "asin", "asinh", "atan", "atanh", "atan2", "ceil", "cbrt", "expm1", "clz32", "cos", "cosh", "exp", "floor", "fround", "hypot", "imul", "log", "log1p", "log2", "log10", "max", "min", "pow", "random", "round", "sign", "sin", "sinh", "sqrt", "tan", "tanh", "trunc"])
+
+    static let jsMathObject = JSType.object(ofGroup: "Math", withProperties: [], withMethods: ["max", "min"])
 
     /// Type of the JavaScript Date object
     static let jsDate = JSType.object(ofGroup: "Date", withMethods: ["toISOString", "toDateString", "toTimeString", "toLocaleString", "getTime", "getFullYear", "getUTCFullYear", "getMonth", "getUTCMonth", "getDate", "getUTCDate", "getDay", "getUTCDay", "getHours", "getUTCHours", "getMinutes", "getUTCMinutes", "getSeconds", "getUTCSeconds", "getMilliseconds", "getUTCMilliseconds", "getTimezoneOffset", "getYear", "now", "setTime", "setMilliseconds", "setUTCMilliseconds", "setSeconds", "setUTCSeconds", "setMinutes", "setUTCMinutes", "setHours", "setUTCHours", "setDate", "setUTCDate", "setMonth", "setUTCMonth", "setFullYear", "setUTCFullYear", "setYear", "toJSON", "toUTCString", "toGMTString"])
@@ -1159,46 +1162,46 @@ public extension ObjectGroup {
     static let jsMathObject = ObjectGroup(
         name: "Math",
         instanceType: .jsMathObject,
-        properties: [
-            "E"  : .number,
-            "PI" : .number
+        properties: [:
+            // "E"  : .number,
+            // "PI" : .number
         ],
         methods: [
-            "abs"    : [.anything] => .number,
-            "acos"   : [.anything] => .number,
-            "acosh"  : [.anything] => .number,
-            "asin"   : [.anything] => .number,
-            "asinh"  : [.anything] => .number,
-            "atan"   : [.anything] => .number,
-            "atanh"  : [.anything] => .number,
-            "atan2"  : [.anything, .anything] => .number,
-            "cbrt"   : [.anything] => .number,
-            "ceil"   : [.anything] => .number,
-            "clz32"  : [.anything] => .number,
-            "cos"    : [.anything] => .number,
-            "cosh"   : [.anything] => .number,
-            "exp"    : [.anything] => .number,
-            "expm1"  : [.anything] => .number,
-            "floor"  : [.anything] => .number,
-            "fround" : [.anything] => .number,
-            "hypot"  : [.anything...] => .number,
-            "imul"   : [.anything, .anything] => .integer,
-            "log"    : [.anything] => .number,
-            "log1p"  : [.anything] => .number,
-            "log10"  : [.anything] => .number,
-            "log2"   : [.anything] => .number,
+            // "abs"    : [.anything] => .number,
+            // "acos"   : [.anything] => .number,
+            // "acosh"  : [.anything] => .number,
+            // "asin"   : [.anything] => .number,
+            // "asinh"  : [.anything] => .number,
+            // "atan"   : [.anything] => .number,
+            // "atanh"  : [.anything] => .number,
+            // "atan2"  : [.anything, .anything] => .number,
+            // "cbrt"   : [.anything] => .number,
+            // "ceil"   : [.anything] => .number,
+            // "clz32"  : [.anything] => .number,
+            // "cos"    : [.anything] => .number,
+            // "cosh"   : [.anything] => .number,
+            // "exp"    : [.anything] => .number,
+            // "expm1"  : [.anything] => .number,
+            // "floor"  : [.anything] => .number,
+            // "fround" : [.anything] => .number,
+            // "hypot"  : [.anything...] => .number,
+            // "imul"   : [.anything, .anything] => .integer,
+            // "log"    : [.anything] => .number,
+            // "log1p"  : [.anything] => .number,
+            // "log10"  : [.anything] => .number,
+            // "log2"   : [.anything] => .number,
             "max"    : [.anything...] => .anything,
             "min"    : [.anything...] => .anything,
-            "pow"    : [.anything, .anything] => .number,
-            "random" : [] => .number,
-            "round"  : [.anything] => .number,
-            "sign"   : [.anything] => .number,
-            "sin"    : [.anything] => .number,
-            "sinh"   : [.anything] => .number,
-            "sqrt"   : [.anything] => .number,
-            "tan"    : [.anything] => .number,
-            "tanh"   : [.anything] => .number,
-            "trunc"  : [.anything] => .number,
+            // "pow"    : [.anything, .anything] => .number,
+            // "random" : [] => .number,
+            // "round"  : [.anything] => .number,
+            // "sign"   : [.anything] => .number,
+            // "sin"    : [.anything] => .number,
+            // "sinh"   : [.anything] => .number,
+            // "sqrt"   : [.anything] => .number,
+            // "tan"    : [.anything] => .number,
+            // "tanh"   : [.anything] => .number,
+            // "trunc"  : [.anything] => .number,
         ]
     )
 

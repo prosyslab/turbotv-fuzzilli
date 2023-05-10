@@ -33,11 +33,7 @@ public struct Variable: Hashable, CustomStringConvertible {
     }
 
     public var identifier: String {
-        if number <= 10 {
-            return "p\(number%2)"
-        } else {
-            return "v\(number)"
-        }
+        return "v\(number)"
     }
 
     public static func ==(lhs: Variable, rhs: Variable) -> Bool {

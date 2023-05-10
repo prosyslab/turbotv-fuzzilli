@@ -462,9 +462,12 @@ public class Fuzzer {
         assert(runner.isInitialized)
 
         let script = lifter.lift(program)
+        // print(script)
 
         dispatchEvent(events.PreExecute, data: program)
         let execution = runner.run(script, withTimeout: timeout ?? config.timeout)
+        // print("Result: \(execution.outcome.description)")
+        // print("Stdout: \(execution.stdout)")
         dispatchEvent(events.PostExecute, data: execution)
 
         return execution
