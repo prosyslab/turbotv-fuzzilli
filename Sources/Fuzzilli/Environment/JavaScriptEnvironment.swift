@@ -146,7 +146,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // it is best to either just disable the builtin that exposes it (e.g. Map constructor) or
         // selectively disable methods/properties by commenting out parts of the ObjectGroup and
         // Type definitions at the end of this file.
-        registerObjectGroup(.jsStrings)
+        // registerObjectGroup(.jsStrings)
         registerObjectGroup(.jsArrays)
         registerObjectGroup(.jsArguments)
         // registerObjectGroup(.jsGenerators)
@@ -165,12 +165,12 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
             registerObjectGroup(.jsTypedArrays(variant))
         }
-        // registerObjectGroup(.jsDataViews)
+        registerObjectGroup(.jsDataViews)
 
         registerObjectGroup(.jsObjectConstructor)
         // registerObjectGroup(.jsPromiseConstructor)
         registerObjectGroup(.jsArrayConstructor)
-        registerObjectGroup(.jsStringConstructor)
+        // registerObjectGroup(.jsStringConstructor)
         // registerObjectGroup(.jsSymbolConstructor)
         registerObjectGroup(.jsBigIntConstructor)
         registerObjectGroup(.jsBooleanConstructor)
@@ -197,7 +197,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         registerBuiltin("Object", ofType: .jsObjectConstructor)
         registerBuiltin("Array", ofType: .jsArrayConstructor)
         registerBuiltin("Function", ofType: .jsFunctionConstructor)
-        registerBuiltin("String", ofType: .jsStringConstructor)
+        // registerBuiltin("String", ofType: .jsStringConstructor)
         registerBuiltin("Boolean", ofType: .jsBooleanConstructor)
         registerBuiltin("Number", ofType: .jsNumberConstructor)
         // registerBuiltin("Symbol", ofType: .jsSymbolConstructor)
@@ -463,7 +463,11 @@ public extension JSType {
     static let jsBooleanConstructor = JSType.functionAndConstructor([.anything] => .boolean) + .object(ofGroup: "BooleanConstructor", withProperties: ["prototype"], withMethods: [])
 
     /// Type of the JavaScript Number constructor builtin.
-    static let jsNumberConstructor = JSType.functionAndConstructor([.anything] => .number) + .object(ofGroup: "NumberConstructor", withProperties: ["prototype", "EPSILON", "MAX_SAFE_INTEGER", "MAX_VALUE", "MIN_SAFE_INTEGER", "MIN_VALUE", "NaN", "NEGATIVE_INFINITY", "POSITIVE_INFINITY"], withMethods: ["isNaN", "isFinite", "isInteger", "isSafeInteger"])
+    static let jsNumberConstructor = JSType.functionAndConstructor([.anything] => .number) + .object(ofGroup: "NumberConstructor",
+    // withProperties: ["prototype", "EPSILON", "MAX_SAFE_INTEGER", "MAX_VALUE", "MIN_SAFE_INTEGER", "MIN_VALUE", "NaN", "NEGATIVE_INFINITY", "POSITIVE_INFINITY"],
+    withProperties: [],
+    withMethods: ["isNaN", "isFinite", "isInteger", "isSafeInteger"]
+    )
 
     /// Type of the JavaScript Symbol constructor builtin.
     static let jsSymbolConstructor = JSType.function([.string] => .jsSymbol) + .object(ofGroup: "SymbolConstructor", withProperties: ["iterator", "asyncIterator", "match", "matchAll", "replace", "search", "split", "hasInstance", "isConcatSpreadable", "unscopables", "species", "toPrimitive", "toStringTag"], withMethods: ["for", "keyFor"])
@@ -1162,17 +1166,17 @@ public extension ObjectGroup {
     static let jsNumberConstructor = ObjectGroup(
         name: "NumberConstructor",
         instanceType: .jsNumberConstructor,
-        properties: [
-            "prototype"         : .object(),
-            // TODO: should there be a .jsNumber type?
-            "EPSILON"           : .number,
-            "MAX_SAFE_INTEGER"  : .number,
-            "MAX_VALUE"         : .number,
-            "MIN_SAFE_INTEGER"  : .number,
-            "MIN_VALUE"         : .number,
-            "NaN"               : .number,
-            "NEGATIVE_INFINITY" : .number,
-            "POSITIVE_INFINITY" : .number,
+        properties: [:
+            // "prototype"         : .object(),
+            // // TODO: should there be a .jsNumber type?
+            // "EPSILON"           : .number,
+            // "MAX_SAFE_INTEGER"  : .number,
+            // "MAX_VALUE"         : .number,
+            // "MIN_SAFE_INTEGER"  : .number,
+            // "MIN_VALUE"         : .number,
+            // "NaN"               : .number,
+            // "NEGATIVE_INFINITY" : .number,
+            // "POSITIVE_INFINITY" : .number,
         ],
         methods: [
             "isNaN"         : [.anything] => .boolean,
