@@ -421,7 +421,7 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
     let minimizer = Minimizer()
 
     /// The mutation fuzzer responsible for mutating programs from the corpus and evaluating the outcome.
-    let mutators = WeightedList([
+    let mutators: WeightedList<Mutator> = WeightedList([
         // (ExplorationMutator(),              3),
         (CodeGenMutator(),                  2),
         // (SpliceMutator(),                   2),
