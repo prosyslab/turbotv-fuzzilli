@@ -374,7 +374,12 @@ public extension JSType {
     static let jsSymbol = JSType.object(ofGroup: "Symbol", withProperties: ["description"])
 
     /// Type of a JavaScript array.
-    static let jsArray = JSType.iterable + JSType.object(ofGroup: "Array", withProperties: ["length"], withMethods: ["at", "concat", "copyWithin", "fill", "find", "findIndex", "pop", "push", "reverse", "shift", "unshift", "slice", "sort", "splice", "includes", "indexOf", "keys", "entries", "forEach", "filter", "map", "every", "some", "reduce", "reduceRight", "toString", "toLocaleString", "join", "lastIndexOf", "values", "flat", "flatMap"])
+    static let jsArray = JSType.iterable + JSType.object(ofGroup: "Array",
+    // withProperties: ["length"],
+    // withMethods: ["at", "concat", "copyWithin", "fill", "find", "findIndex", "pop", "push", "reverse", "shift", "unshift", "slice", "sort", "splice", "includes", "indexOf", "keys", "entries", "forEach", "filter", "map", "every", "some", "reduce", "reduceRight", "toString", "toLocaleString", "join", "lastIndexOf", "values", "flat", "flatMap"])
+    withProperties: [],
+    withMethods: []
+    )
 
     /// Type of a function's arguments object.
     static let jsArguments = JSType.iterable + JSType.object(ofGroup: "Arguments", withProperties: ["length", "callee"])
@@ -404,7 +409,12 @@ public extension JSType {
     static let jsFinalizationRegistry = JSType.object(ofGroup: "FinalizationRegistry", withMethods: ["register", "unregister"])
 
     /// Type of a JavaScript ArrayBuffer object.
-    static let jsArrayBuffer = JSType.object(ofGroup: "ArrayBuffer", withProperties: ["byteLength", "maxByteLength", "resizable"], withMethods: ["resize", "slice", "transfer"])
+    static let jsArrayBuffer = JSType.object(ofGroup: "ArrayBuffer",
+    // withProperties: ["byteLength", "maxByteLength", "resizable"],
+    // withMethods: ["resize", "slice", "transfer"])
+    withProperties: [],
+    withMethods: []
+    )
 
     /// Type of a JavaScript SharedArrayBuffer object.
     static let jsSharedArrayBuffer = JSType.object(ofGroup: "SharedArrayBuffer", withProperties: ["byteLength", "maxByteLength", "growable"], withMethods: ["grow", "slice"])
@@ -414,17 +424,31 @@ public extension JSType {
 
     /// Type of a JavaScript TypedArray object of the given variant.
     static func jsTypedArray(_ variant: String) -> JSType {
-        return .iterable + .object(ofGroup: variant, withProperties: ["buffer", "byteOffset", "byteLength", "length"], withMethods: ["copyWithin", "fill", "find", "findIndex", "reverse", "slice", "sort", "includes", "indexOf", "keys", "entries", "forEach", "filter", "map", "every", "set", "some", "subarray", "reduce", "reduceRight", "join", "lastIndexOf", "values", "toLocaleString", "toString"])
+        return .iterable + .object(ofGroup: variant,
+        // withProperties: ["buffer", "byteOffset", "byteLength", "length"],
+        // withMethods: ["copyWithin", "fill", "find", "findIndex", "reverse", "slice", "sort", "includes", "indexOf", "keys", "entries", "forEach", "filter", "map", "every", "set", "some", "subarray", "reduce", "reduceRight", "join", "lastIndexOf", "values", "toLocaleString", "toString"])
+        withProperties: [],
+        withMethods: []
+        )
     }
 
     /// Type of a JavaScript function.
     /// A JavaScript function is also constructors. Moreover, it is also an object as it has a number of properties and methods.
     static func jsFunction(_ signature: Signature = Signature.forUnknownFunction) -> JSType {
-        return .constructor(signature) + .function(signature) + .object(ofGroup: "Function", withProperties: ["prototype", "length", "arguments", "caller", "name"], withMethods: ["apply", "bind", "call"])
+        return .constructor(signature) + .function(signature) + .object(ofGroup: "Function",
+        // withProperties: ["prototype", "length", "arguments", "caller", "name"],
+        // withMethods: ["apply", "bind", "call"])
+        withProperties: [],
+        withMethods: []
+        )
     }
 
     /// Type of the JavaScript Object constructor builtin.
-    static let jsObjectConstructor = .functionAndConstructor([.anything...] => .object()) + .object(ofGroup: "ObjectConstructor", withProperties: ["prototype"], withMethods: ["assign", "fromEntries", "getOwnPropertyDescriptor", "getOwnPropertyDescriptors", "getOwnPropertyNames", "getOwnPropertySymbols", "is", "preventExtensions", "seal", "create", "defineProperties", "defineProperty", "freeze", "getPrototypeOf", "setPrototypeOf", "isExtensible", "isFrozen", "isSealed", "keys", "entries", "values"])
+    static let jsObjectConstructor = .functionAndConstructor([.anything...] => .object()) + .object(ofGroup: "ObjectConstructor",
+    // withProperties: ["prototype"],
+    withProperties: [],
+    withMethods: ["freeze", "is"])
+    // withMethods: ["assign", "fromEntries", "getOwnPropertyDescriptor", "getOwnPropertyDescriptors", "getOwnPropertyNames", "getOwnPropertySymbols", "is", "preventExtensions", "seal", "create", "defineProperties", "defineProperty", "freeze", "getPrototypeOf", "setPrototypeOf", "isExtensible", "isFrozen", "isSealed", "keys", "entries", "values"])
 
     /// Type of the JavaScript Array constructor builtin.
     static let jsArrayConstructor = .functionAndConstructor([.integer] => .jsArray) + .object(ofGroup: "ArrayConstructor", withProperties: ["prototype"], withMethods: ["from", "of", "isArray"])
@@ -632,42 +656,42 @@ public extension ObjectGroup {
     static let jsArrays = ObjectGroup(
         name: "Array",
         instanceType: .jsArray,
-        properties: [
-            "length"      : .integer,
+        properties: [:
+            // "length"      : .integer,
         ],
-        methods: [
-            "at"             : [.integer] => .anything,
-            "copyWithin"     : [.integer, .integer, .opt(.integer)] => .jsArray,
-            "entries"        : [] => .jsArray,
-            "every"          : [.function(), .opt(.object())] => .boolean,
-            "fill"           : [.anything, .opt(.integer), .opt(.integer)] => .undefined,
-            "find"           : [.function(), .opt(.object())] => .anything,
-            "findIndex"      : [.function(), .opt(.object())] => .integer,
-            "forEach"        : [.function(), .opt(.object())] => .undefined,
-            "includes"       : [.anything, .opt(.integer)] => .boolean,
-            "indexOf"        : [.anything, .opt(.integer)] => .integer,
-            "join"           : [.string] => .jsString,
-            "keys"           : [] => .object(),          // returns an array iterator
-            "lastIndexOf"    : [.anything, .opt(.integer)] => .integer,
-            "reduce"         : [.function(), .opt(.anything)] => .anything,
-            "reduceRight"    : [.function(), .opt(.anything)] => .anything,
-            "reverse"        : [] => .undefined,
-            "some"           : [.function(), .opt(.anything)] => .boolean,
-            "sort"           : [.function()] => .undefined,
-            "values"         : [] => .object(),
-            "pop"            : [] => .anything,
-            "push"           : [.anything...] => .integer,
-            "shift"          : [] => .anything,
-            "splice"         : [.integer, .opt(.integer), .anything...] => .jsArray,
-            "unshift"        : [.anything...] => .integer,
-            "concat"         : [.anything...] => .jsArray,
-            "filter"         : [.function(), .opt(.object())] => .jsArray,
-            "map"            : [.function(), .opt(.object())] => .jsArray,
-            "slice"          : [.opt(.integer), .opt(.integer)] => .jsArray,
-            "flat"           : [.opt(.integer)] => .jsArray,
-            "flatMap"        : [.function(), .opt(.anything)] => .jsArray,
-            "toString"       : [] => .jsString,
-            "toLocaleString" : [.opt(.string), .opt(.object())] => .jsString,
+        methods: [:
+            // "at"             : [.integer] => .anything,
+            // "copyWithin"     : [.integer, .integer, .opt(.integer)] => .jsArray,
+            // "entries"        : [] => .jsArray,
+            // "every"          : [.function(), .opt(.object())] => .boolean,
+            // "fill"           : [.anything, .opt(.integer), .opt(.integer)] => .undefined,
+            // "find"           : [.function(), .opt(.object())] => .anything,
+            // "findIndex"      : [.function(), .opt(.object())] => .integer,
+            // "forEach"        : [.function(), .opt(.object())] => .undefined,
+            // "includes"       : [.anything, .opt(.integer)] => .boolean,
+            // "indexOf"        : [.anything, .opt(.integer)] => .integer,
+            // "join"           : [.string] => .jsString,
+            // "keys"           : [] => .object(),          // returns an array iterator
+            // "lastIndexOf"    : [.anything, .opt(.integer)] => .integer,
+            // "reduce"         : [.function(), .opt(.anything)] => .anything,
+            // "reduceRight"    : [.function(), .opt(.anything)] => .anything,
+            // "reverse"        : [] => .undefined,
+            // "some"           : [.function(), .opt(.anything)] => .boolean,
+            // "sort"           : [.function()] => .undefined,
+            // "values"         : [] => .object(),
+            // "pop"            : [] => .anything,
+            // "push"           : [.anything...] => .integer,
+            // "shift"          : [] => .anything,
+            // "splice"         : [.integer, .opt(.integer), .anything...] => .jsArray,
+            // "unshift"        : [.anything...] => .integer,
+            // "concat"         : [.anything...] => .jsArray,
+            // "filter"         : [.function(), .opt(.object())] => .jsArray,
+            // "map"            : [.function(), .opt(.object())] => .jsArray,
+            // "slice"          : [.opt(.integer), .opt(.integer)] => .jsArray,
+            // "flat"           : [.opt(.integer)] => .jsArray,
+            // "flatMap"        : [.function(), .opt(.anything)] => .jsArray,
+            // "toString"       : [] => .jsString,
+            // "toLocaleString" : [.opt(.string), .opt(.object())] => .jsString,
         ]
     )
 
@@ -675,17 +699,17 @@ public extension ObjectGroup {
     static let jsFunctions = ObjectGroup(
         name: "Function",
         instanceType: .jsFunction(),
-        properties: [
-            "prototype"   : .object(),
-            "length"      : .integer,
-            "arguments"   : .jsArray,
-            "caller"      : .jsFunction(),
-            "name"        : .jsString,
+        properties: [:
+            // "prototype"   : .object(),
+            // "length"      : .integer,
+            // "arguments"   : .jsArray,
+            // "caller"      : .jsFunction(),
+            // "name"        : .jsString,
         ],
-        methods: [
-            "apply" : [.object(), .object()] => .anything,
-            "call"  : [.object(), .anything...] => .anything,
-            "bind"  : [.object(), .anything...] => .anything,
+        methods: [:
+            // "apply" : [.object(), .object()] => .anything,
+            // "call"  : [.object(), .anything...] => .anything,
+            // "bind"  : [.object(), .anything...] => .anything,
         ]
     )
 
@@ -693,8 +717,8 @@ public extension ObjectGroup {
     static let jsSymbols = ObjectGroup(
         name: "Symbol",
         instanceType: .jsSymbol,
-        properties: [
-            "description" : .jsString,
+        properties: [:
+            // "description" : .jsString,
         ],
         methods: [:]
     )
@@ -822,15 +846,15 @@ public extension ObjectGroup {
     static let jsArrayBuffers = ObjectGroup(
         name: "ArrayBuffer",
         instanceType: .jsArrayBuffer,
-        properties: [
-            "byteLength"    : .integer,
-            "maxByteLength" : .integer,
-            "resizable"     : .boolean
+        properties: [:
+            // "byteLength"    : .integer,
+            // "maxByteLength" : .integer,
+            // "resizable"     : .boolean
         ],
-        methods: [
-            "resize"    : [.integer] => .undefined,
-            "slice"     : [.integer, .opt(.integer)] => .jsArrayBuffer,
-            "transfer"  : [] => .jsArrayBuffer,
+        methods: [:
+            // "resize"    : [.integer] => .undefined,
+            // "slice"     : [.integer, .opt(.integer)] => .jsArrayBuffer,
+            // "transfer"  : [] => .jsArrayBuffer,
         ]
     )
 
@@ -854,38 +878,38 @@ public extension ObjectGroup {
         return ObjectGroup(
             name: variant,
             instanceType: .jsTypedArray(variant),
-            properties: [
-                "buffer"      : .jsArrayBuffer,
-                "byteLength"  : .integer,
-                "byteOffset"  : .integer,
-                "length"      : .integer
+            properties: [:
+                // "buffer"      : .jsArrayBuffer,
+                // "byteLength"  : .integer,
+                // "byteOffset"  : .integer,
+                // "length"      : .integer
             ],
-            methods: [
-                "copyWithin"  : [.integer, .integer, .opt(.integer)] => .undefined,
-                "entries"     : [] => .jsArray,
-                "every"       : [.function(), .opt(.object())] => .boolean,
-                "fill"        : [.anything, .opt(.integer), .opt(.integer)] => .undefined,
-                "find"        : [.function(), .opt(.object())] => .anything,
-                "findIndex"   : [.function(), .opt(.object())] => .integer,
-                "forEach"     : [.function(), .opt(.object())] => .undefined,
-                "includes"    : [.anything, .opt(.integer)] => .boolean,
-                "indexOf"     : [.anything, .opt(.integer)] => .integer,
-                "join"        : [.string] => .jsString,
-                "keys"        : [] => .object(),          // returns an array iterator
-                "lastIndexOf" : [.anything, .opt(.integer)] => .integer,
-                "reduce"      : [.function(), .opt(.anything)] => .anything,
-                "reduceRight" : [.function(), .opt(.anything)] => .anything,
-                "reverse"     : [] => .undefined,
-                "set"         : [.object(), .opt(.integer)] => .undefined,
-                "some"        : [.function(), .opt(.anything)] => .boolean,
-                "sort"        : [.function()] => .undefined,
-                "values"      : [] => .object(),
-                "filter"      : [.function(), .opt(.object())] => .jsTypedArray(variant),
-                "map"         : [.function(), .opt(.object())] => .jsTypedArray(variant),
-                "slice"       : [.opt(.integer), .opt(.integer)] => .jsTypedArray(variant),
-                "subarray"    : [.opt(.integer), .opt(.integer)] => .jsTypedArray(variant),
-                "toString"       : [] => .jsString,
-                "toLocaleString" : [.opt(.string), .opt(.object())] => .jsString
+            methods: [:
+                // "copyWithin"  : [.integer, .integer, .opt(.integer)] => .undefined,
+                // "entries"     : [] => .jsArray,
+                // "every"       : [.function(), .opt(.object())] => .boolean,
+                // "fill"        : [.anything, .opt(.integer), .opt(.integer)] => .undefined,
+                // "find"        : [.function(), .opt(.object())] => .anything,
+                // "findIndex"   : [.function(), .opt(.object())] => .integer,
+                // "forEach"     : [.function(), .opt(.object())] => .undefined,
+                // "includes"    : [.anything, .opt(.integer)] => .boolean,
+                // "indexOf"     : [.anything, .opt(.integer)] => .integer,
+                // "join"        : [.string] => .jsString,
+                // "keys"        : [] => .object(),          // returns an array iterator
+                // "lastIndexOf" : [.anything, .opt(.integer)] => .integer,
+                // "reduce"      : [.function(), .opt(.anything)] => .anything,
+                // "reduceRight" : [.function(), .opt(.anything)] => .anything,
+                // "reverse"     : [] => .undefined,
+                // "set"         : [.object(), .opt(.integer)] => .undefined,
+                // "some"        : [.function(), .opt(.anything)] => .boolean,
+                // "sort"        : [.function()] => .undefined,
+                // "values"      : [] => .object(),
+                // "filter"      : [.function(), .opt(.object())] => .jsTypedArray(variant),
+                // "map"         : [.function(), .opt(.object())] => .jsTypedArray(variant),
+                // "slice"       : [.opt(.integer), .opt(.integer)] => .jsTypedArray(variant),
+                // "subarray"    : [.opt(.integer), .opt(.integer)] => .jsTypedArray(variant),
+                // "toString"       : [] => .jsString,
+                // "toLocaleString" : [.opt(.string), .opt(.object())] => .jsString
             ]
         )
     }
@@ -1010,31 +1034,31 @@ public extension ObjectGroup {
     static let jsObjectConstructor = ObjectGroup(
         name: "ObjectConstructor",
         instanceType: .jsObjectConstructor,
-        properties: [
-            "prototype" : .object(),        // TODO
+        properties: [:
+            // "prototype" : .object(),        // TODO
         ],
         methods: [
-            "assign"                    : [.object(), .object()] => .undefined,
-            "create"                    : [.object(), .object()] => .object(),
-            "defineProperty"            : [.object(), .string, .oneof(.object(withProperties: ["configurable", "writable", "enumerable", "value"]), .object(withMethods: ["get", "set"]))] => .undefined,
-            "defineProperties"          : [.object(), .object()] => .undefined,
-            "entries"                   : [.object()] => .object(),
+            // "assign"                    : [.object(), .object()] => .undefined,
+            // "create"                    : [.object(), .object()] => .object(),
+            // "defineProperty"            : [.object(), .string, .oneof(.object(withProperties: ["configurable", "writable", "enumerable", "value"]), .object(withMethods: ["get", "set"]))] => .undefined,
+            // "defineProperties"          : [.object(), .object()] => .undefined,
+            // "entries"                   : [.object()] => .object(),
             "freeze"                    : [.object()] => .undefined,
-            "fromEntries"               : [.object()] => .object(),
-            "getOwnPropertyDescriptor"  : [.object(), .string] => .object(withProperties: ["configurable", "writable", "enumerable", "value"]),
-            "getOwnPropertyDescriptors" : [.object()] => .object(),
-            "getOwnPropertyNames"       : [.object()] => .jsArray,
-            "getOwnPropertySymbols"     : [.object()] => .jsArray,
-            "getPrototypeOf"            : [.object()] => .object(),
+            // "fromEntries"               : [.object()] => .object(),
+            // "getOwnPropertyDescriptor"  : [.object(), .string] => .object(withProperties: ["configurable", "writable", "enumerable", "value"]),
+            // "getOwnPropertyDescriptors" : [.object()] => .object(),
+            // "getOwnPropertyNames"       : [.object()] => .jsArray,
+            // "getOwnPropertySymbols"     : [.object()] => .jsArray,
+            // "getPrototypeOf"            : [.object()] => .object(),
             "is"                        : [.object(), .object()] => .boolean,
-            "isExtensible"              : [.object()] => .boolean,
-            "isFrozen"                  : [.object()] => .boolean,
-            "isSealed"                  : [.object()] => .boolean,
-            "keys"                      : [.object()] => .jsArray,
-            "preventExtensions"         : [.object()] => .object(),
-            "seal"                      : [.object()] => .object(),
-            "setPrototypeOf"            : [.object(), .object()] => .object(),
-            "values"                    : [.object()] => .jsArray,
+            // "isExtensible"              : [.object()] => .boolean,
+            // "isFrozen"                  : [.object()] => .boolean,
+            // "isSealed"                  : [.object()] => .boolean,
+            // "keys"                      : [.object()] => .jsArray,
+            // "preventExtensions"         : [.object()] => .object(),
+            // "seal"                      : [.object()] => .object(),
+            // "setPrototypeOf"            : [.object(), .object()] => .object(),
+            // "values"                    : [.object()] => .jsArray,
         ]
     )
 
