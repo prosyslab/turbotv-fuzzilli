@@ -614,6 +614,11 @@ let v8Profile = Profile(
         // Symbol-related
         "IteratorGenerator",
 
+        // Array
+        "ArrayGenerator",
+        "IntArrayGenerator",
+        "FloatArrayGenerator",
+
         // Misc
         "TypedArrayGenerator",
         "ImitationGenerator",
@@ -644,6 +649,7 @@ let v8Profile = Profile(
         "ElementRemovalGenerator",
         "ElementRetrievalGenerator",
         "WeirdClassGenerator",
+        "FastToSlowPropertiesGenerator",
         ],
 
     additionalBuiltins: [:]
