@@ -121,9 +121,12 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
     public let generatorType = JSType.jsGenerator
     public let promiseType = JSType.jsPromise
 
-    /// Identifiers that should be used for custom properties and methods.
-    public static let CustomPropertyNames = ["a", "b", "c", "d", "e", "f", "g", "h"]
-    public static let CustomMethodNames = ["m", "n", "o", "p", "valueOf", "toString"]
+    // / Identifiers that should be used for custom properties and methods.
+    // public static let CustomPropertyNames = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    // public static let CustomMethodNames = ["m", "n", "o", "p", "valueOf", "toString"]
+    public static let CustomPropertyNames = ["x"]
+    public static let CustomMethodNames: [String] = ["m"]
+
 
     public private(set) var builtins = Set<String>()
     public let customProperties = Set<String>(CustomPropertyNames)
@@ -1218,7 +1221,7 @@ public extension ObjectGroup {
             // "log1p"  : [.anything] => .number,
             // "log10"  : [.anything] => .number,
             // "log2"   : [.anything] => .number,
-            "max"    : [.anything,.anything ] => .anything,
+            "max"    : [.anything,.anything] => .anything,
             "min"    : [.anything,.anything] => .anything,
             // "pow"    : [.anything, .anything] => .number,
             // "random" : [] => .number,
