@@ -602,6 +602,10 @@ let v8Profile = Profile(
         // RegExp
         "RegExpGenerator",
 
+        // String
+        "StringGenerator",
+        "TemplateStringGenerator",
+
         // Function
         "TrivialFunctionGenerator",
         "ArrowFunctionGenerator",
