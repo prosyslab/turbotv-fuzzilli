@@ -426,13 +426,13 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
         (CodeGenMutator(),                  2),
         // (SpliceMutator(),                   2),
         // (ProbingMutator(),                  2),
-        (InputMutator(isTypeAware: false),  2),
+        // (InputMutator(isTypeAware: false),  2),
         (InputMutator(isTypeAware: true),   1),
         // Can be enabled for experimental use, ConcatMutator is a limited version of CombineMutator
         // (ConcatMutator(),                1),
-        (OperationMutator(),                1),
+        (OperationMutator(),                1)
         // (CombineMutator(),                  1),
-        (JITStressMutator(),                1),
+        // (JITStressMutator(),                1),
     ])
 
     // Construct the fuzzer instance.
