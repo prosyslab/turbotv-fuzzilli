@@ -245,18 +245,18 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         }
 
         // Add some well-known builtin properties and methods.
-        builtinProperties.insert("__proto__")
-        builtinProperties.insert("constructor")
-        builtinMethods.insert("valueOf")
-        builtinMethods.insert("toString")
+        // builtinProperties.insert("__proto__")
+        // builtinProperties.insert("constructor")
+        // builtinMethods.insert("valueOf")
+        // builtinMethods.insert("toString")
     }
 
     override func initialize() {
         // Ensure that some of the common property/method names exist.
-        assert(builtinProperties.contains("__proto__"))
-        assert(builtinProperties.contains("constructor"))
-        assert(builtinMethods.contains("valueOf"))
-        assert(builtinMethods.contains("toString"))
+        // assert(builtinProperties.contains("__proto__"))
+        // assert(builtinProperties.contains("constructor"))
+        // assert(builtinMethods.contains("valueOf"))
+        // assert(builtinMethods.contains("toString"))
 
         // Log detailed information about the environment here so users are aware of it and can modify things if they like.
         logger.info("Initialized static JS environment model")
