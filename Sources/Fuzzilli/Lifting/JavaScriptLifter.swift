@@ -1644,8 +1644,8 @@ public class JavaScriptLifter: Lifter {
                 let exp2 = {
                     if expression.text.starts(with: "v"){
                         if let idx = Int(expression.text[expression.text.index(after: expression.text.startIndex)...]){
-                            // change here to adjust parameter frequency
-                            if idx <= 1 {
+                            // change here to adjust the parameter occurrence frequency
+                            if idx <= 3 {
                                 return expression.change_text(text: "p\(idx%2)")
                             }
                         }

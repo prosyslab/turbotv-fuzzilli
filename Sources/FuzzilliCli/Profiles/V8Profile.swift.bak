@@ -481,15 +481,15 @@ let v8Profile = Profile(
 
     codeSuffix: """
      }
-    let jit_before = opt(false, 0);
-    opt(true, 0);
+    let jit_a0 = opt(1, 0);
+    let jit_a0_0 = opt(1, 0);
     %PrepareFunctionForOptimization(opt);
-    opt(true, 0);
+    let jit_a0_1 = opt(1, 0);
     %OptimizeFunctionOnNextCall(opt)
-    let jit_after = opt(false, 0);
-    if (jit_before === undefined && jit_after === undefined){
-        opt(false, 0);
-    } else if (!deepEquals(jit_before, jit_after)) {
+    let jit_a2 = opt(1, 0);
+    if (jit_a0 === undefined && jit_a2 === undefined){
+        opt(1, 2);
+    } else if (deepEquals(jit_a0, jit_a0_0) && deepEquals(jit_a0, jit_a0_1) && !deepEquals(jit_a0, jit_a2)) {
         fuzzilli('FUZZILLI_CRASH', 0);
     }
     """,
