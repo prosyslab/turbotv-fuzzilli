@@ -17,33 +17,42 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
     public static let jsTypeNames = ["undefined", "boolean", "number", "string", "symbol", "function", "object", "bigint"]
 
     // Integer values that are more likely to trigger edge-cases.
+    // public static let InterestingIntegers: [Int64] = [
+    //     -9223372036854775808, -9223372036854775807,               // Int64 min, mostly for BigInts
+    //     -9007199254740992, -9007199254740991, -9007199254740990,  // Smallest integer value that is still precisely representable by a double
+    //     -4294967297, -4294967296, -4294967295,                    // Negative Uint32 max
+    //     -2147483649, -2147483648, -2147483647,                    // Int32 min
+    //     -1073741824, -536870912, -268435456,                      // -2**32 / {4, 8, 16}
+    //     -65537, -65536, -65535,                                   // -2**16
+    //     -4096, -1024, -256, -128,                                 // Other powers of two
+    //     -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 32, 64,         // Numbers around 0
+    //     127, 128, 129,                                            // 2**7
+    //     255, 256, 257,                                            // 2**8
+    //     512, 1000, 1024, 4096, 10000,                             // Misc numbers
+    //     65535, 65536, 65537,                                      // 2**16
+    //     268435439, 268435440, 268435441,                          // V8 String kMaxLength (32-bit)
+    //     536870887, 536870888, 536870889,                          // V8 String kMaxLength (64-bit)
+    //     268435456, 536870912, 1073741824,                         // 2**32 / {4, 8, 16}
+    //     1073741823, 1073741824, 1073741825,                       // 2**30
+    //     2147483647, 2147483648, 2147483649,                       // Int32 max
+    //     4294967295, 4294967296, 4294967297,                       // Uint32 max
+    //     9007199254740990, 9007199254740991, 9007199254740992,     // Biggest integer value that is still precisely representable by a double
+    //     9223372036854775807,                                      // Int64 max, mostly for BigInts
+    // ]
+
     public static let InterestingIntegers: [Int64] = [
-        -9223372036854775808, -9223372036854775807,               // Int64 min, mostly for BigInts
-        -9007199254740992, -9007199254740991, -9007199254740990,  // Smallest integer value that is still precisely representable by a double
-        -4294967297, -4294967296, -4294967295,                    // Negative Uint32 max
-        -2147483649, -2147483648, -2147483647,                    // Int32 min
-        -1073741824, -536870912, -268435456,                      // -2**32 / {4, 8, 16}
-        -65537, -65536, -65535,                                   // -2**16
-        -4096, -1024, -256, -128,                                 // Other powers of two
-        -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 32, 64,         // Numbers around 0
-        127, 128, 129,                                            // 2**7
-        255, 256, 257,                                            // 2**8
-        512, 1000, 1024, 4096, 10000,                             // Misc numbers
-        65535, 65536, 65537,                                      // 2**16
-        268435439, 268435440, 268435441,                          // V8 String kMaxLength (32-bit)
-        536870887, 536870888, 536870889,                          // V8 String kMaxLength (64-bit)
-        268435456, 536870912, 1073741824,                         // 2**32 / {4, 8, 16}
-        1073741823, 1073741824, 1073741825,                       // 2**30
-        2147483647, 2147483648, 2147483649,                       // Int32 max
-        4294967295, 4294967296, 4294967297,                       // Uint32 max
-        9007199254740990, 9007199254740991, 9007199254740992,     // Biggest integer value that is still precisely representable by a double
-        9223372036854775807,                                      // Int64 max, mostly for BigInts
+        -2147483648,                   // Int32 min
+        -1, 0, 1, 2, 32,        // Numbers around 0
+        2147483648
     ]
+
 
     public let interestingIntegers = InterestingIntegers
 
     // Double values that are more likely to trigger edge-cases.
-    public let interestingFloats = [-Double.infinity, -Double.greatestFiniteMagnitude, -1e-15, -1e12, -1e9, -1e6, -1e3, -5.0, -4.0, -3.0, -2.0, -1.0, -Double.ulpOfOne, -Double.leastNormalMagnitude, -0.0, 0.0, Double.leastNormalMagnitude, Double.ulpOfOne, 1.0, 2.0, 3.0, 4.0, 5.0, 1e3, 1e6, 1e9, 1e12, 1e-15, Double.greatestFiniteMagnitude, Double.infinity, Double.nan]
+    // public let interestingFloats = [-Double.infinity, -Double.greatestFiniteMagnitude, -1e-15, -1e12, -1e9, -1e6, -1e3, -5.0, -4.0, -3.0, -2.0, -1.0, -Double.ulpOfOne, -Double.leastNormalMagnitude, -0.0, 0.0, Double.leastNormalMagnitude, Double.ulpOfOne, 1.0, 2.0, 3.0, 4.0, 5.0, 1e3, 1e6, 1e9, 1e12, 1e-15, Double.greatestFiniteMagnitude, Double.infinity, Double.nan]
+
+    public let interestingFloats = [-0.0, 0.0, 1.1, Double.infinity, Double.nan]
 
     // TODO more?
     public let interestingStrings = jsTypeNames
@@ -423,7 +432,8 @@ public extension JSType {
     static let jsSharedArrayBuffer = JSType.object(ofGroup: "SharedArrayBuffer", withProperties: ["byteLength", "maxByteLength", "growable"], withMethods: ["grow", "slice"])
 
     /// Type of a JavaScript DataView object.
-    static let jsDataView = JSType.object(ofGroup: "DataView", withProperties: ["buffer", "byteLength", "byteOffset"], withMethods: ["getInt8", "getUint8", "getInt16", "getUint16", "getInt32", "getUint32", "getFloat32", "getFloat64", "getBigInt64", "setInt8", "setUint8", "setInt16", "setUint16", "setInt32", "setUint32", "setFloat32", "setFloat64", "setBigInt64"])
+    // static let jsDataView = JSType.object(ofGroup: "DataView", withProperties: ["buffer", "byteLength", "byteOffset"], withMethods: ["getInt8", "getUint8", "getInt16", "getUint16", "getInt32", "getUint32", "getFloat32", "getFloat64", "getBigInt64", "setInt8", "setUint8", "setInt16", "setUint16", "setInt32", "setUint32", "setFloat32", "setFloat64", "setBigInt64"])
+    static let jsDataView = JSType.object(ofGroup: "DataView", withProperties: [], withMethods: ["setUint8"])
 
     /// Type of a JavaScript TypedArray object of the given variant.
     static func jsTypedArray(_ variant: String) -> JSType {
@@ -492,7 +502,7 @@ public extension JSType {
     }
 
     /// Type of the JavaScript ArrayBuffer constructor builtin.
-    static let jsArrayBufferConstructor = JSType.constructor([.integer, .opt(.object())] => .jsArrayBuffer) + .object(ofGroup: "ArrayBufferConstructor", withProperties: ["prototype"], withMethods: ["isView"])
+    static let jsArrayBufferConstructor = JSType.constructor([.integer, .opt(.object())] => .jsArrayBuffer) + .object(ofGroup: "ArrayBufferConstructor", withProperties: [], withMethods: [])
 
     /// Type of the JavaScript SharedArrayBuffer constructor builtin.
     static let jsSharedArrayBufferConstructor = JSType.constructor([.integer, .opt(.object())] => .jsSharedArrayBuffer) + .object(ofGroup: "SharedArrayBufferConstructor", withProperties: ["prototype"], withMethods: [])
@@ -925,30 +935,26 @@ public extension ObjectGroup {
     static let jsDataViews = ObjectGroup(
         name: "DataView",
         instanceType: .jsDataView,
-        properties: [
-            "buffer"     : .jsArrayBuffer,
-            "byteLength" : .integer,
-            "byteOffset" : .integer
-        ],
+        properties: [:],
         methods: [
-            "getInt8"    : [.integer] => .integer,
-            "getUint8"   : [.integer] => .integer,
-            "getInt16"   : [.integer] => .integer,
-            "getUint16"  : [.integer] => .integer,
-            "getInt32"   : [.integer] => .integer,
-            "getUint32"  : [.integer] => .integer,
-            "getFloat32" : [.integer] => .float,
-            "getFloat64" : [.integer] => .float,
-            "getBigInt64": [.integer] => .bigint,
-            "setInt8"    : [.integer, .integer] => .undefined,
+            // "getInt8"    : [.integer] => .integer,
+            // "getUint8"   : [.integer] => .integer,
+            // "getInt16"   : [.integer] => .integer,
+            // "getUint16"  : [.integer] => .integer,
+            // "getInt32"   : [.integer] => .integer,
+            // "getUint32"  : [.integer] => .integer,
+            // "getFloat32" : [.integer] => .float,
+            // "getFloat64" : [.integer] => .float,
+            // "getBigInt64": [.integer] => .bigint,
+            // "setInt8"    : [.integer, .integer] => .undefined,
             "setUint8"   : [.integer, .integer] => .undefined,
-            "setInt16"   : [.integer, .integer] => .undefined,
-            "setUint16"  : [.integer, .integer] => .undefined,
-            "setInt32"   : [.integer, .integer] => .undefined,
-            "setUint32"  : [.integer, .integer] => .undefined,
-            "setFloat32" : [.integer, .float] => .undefined,
-            "setFloat64" : [.integer, .float] => .undefined,
-            "setBigInt64": [.integer, .bigint] => .undefined,
+            // "setInt16"   : [.integer, .integer] => .undefined,
+            // "setUint16"  : [.integer, .integer] => .undefined,
+            // "setInt32"   : [.integer, .integer] => .undefined,
+            // "setUint32"  : [.integer, .integer] => .undefined,
+            // "setFloat32" : [.integer, .float] => .undefined,
+            // "setFloat64" : [.integer, .float] => .undefined,
+            // "setBigInt64": [.integer, .bigint] => .undefined,
         ]
     )
 
@@ -1086,11 +1092,9 @@ public extension ObjectGroup {
     static let jsArrayBufferConstructor = ObjectGroup(
         name: "ArrayBufferConstructor",
         instanceType: .jsArrayBufferConstructor,
-        properties: [
-            "prototype" : .object()
+        properties: [:
         ],
-        methods: [
-            "isView" : [.anything] => .boolean
+        methods: [:
         ]
     )
 

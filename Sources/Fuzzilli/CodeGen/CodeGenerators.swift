@@ -804,11 +804,7 @@ public let CodeGenerators: [CodeGenerator] = [
     CodeGenerator("PropertyAssignmentGenerator", input: .object()) { b, obj in
         let propertyName: String
         // Either change an existing property or define a new one
-        if probability(0.5) {
-            propertyName = b.type(of: obj).randomProperty() ?? b.randomCustomPropertyName()
-        } else {
-            propertyName = b.randomCustomPropertyName()
-        }
+        propertyName = b.type(of: obj).randomProperty() ?? b.randomCustomPropertyName()
 
         // If this is an existing property with a specific type, try to find a variable with a matching type.
         var propertyType = b.type(ofProperty: propertyName, on: obj)

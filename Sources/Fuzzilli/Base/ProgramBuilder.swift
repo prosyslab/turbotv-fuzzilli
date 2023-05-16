@@ -218,7 +218,9 @@ public class ProgramBuilder {
 
     /// Returns a random integer value.
     public func randomInt() -> Int64 {
-        if probability(0.5) {
+        // if probability(0.5) {
+        // choose always interesting integers
+        if probability(1.0) {
             return chooseUniform(from: self.fuzzer.environment.interestingIntegers)
         } else {
             return withEqualProbability({
@@ -262,7 +264,9 @@ public class ProgramBuilder {
 
     /// Returns a random floating point value.
     public func randomFloat() -> Double {
-        if probability(0.5) {
+        // if probability(0.5) {
+        // choose from interesting float always
+        if probability(1.0) {
             return chooseUniform(from: fuzzer.environment.interestingFloats)
         } else {
             return withEqualProbability({
