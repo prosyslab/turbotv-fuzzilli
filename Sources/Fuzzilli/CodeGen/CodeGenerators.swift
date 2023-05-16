@@ -968,7 +968,7 @@ public let CodeGenerators: [CodeGenerator] = [
         }
         // TODO: here and below, if we aren't finding arguments of compatible types, we probably still need a guard.
         let arguments = b.randomArguments(forCallingMethod: methodName, on: obj)
-        b.callMethod(methodName, on: obj, withArgs: arguments, guard: true)
+        b.callMethod(methodName, on: obj, withArgs: arguments, guard: false)
     },
 
     CodeGenerator("MethodCallWithSpreadGenerator", input: .object()) { b, obj in

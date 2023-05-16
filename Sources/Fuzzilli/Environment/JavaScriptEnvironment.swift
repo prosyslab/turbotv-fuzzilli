@@ -159,12 +159,12 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // selectively disable methods/properties by commenting out parts of the ObjectGroup and
         // Type definitions at the end of this file.
         // registerObjectGroup(.jsStrings)
-        registerObjectGroup(.jsArrays)
-        registerObjectGroup(.jsArguments)
+        // registerObjectGroup(.jsArrays)
+        // registerObjectGroup(.jsArguments)
         // registerObjectGroup(.jsGenerators)
         // registerObjectGroup(.jsPromises)
         // registerObjectGroup(.jsRegExps)
-        registerObjectGroup(.jsFunctions)
+        // registerObjectGroup(.jsFunctions)
         // registerObjectGroup(.jsSymbols)
         // registerObjectGroup(.jsMaps)
         // registerObjectGroup(.jsWeakMaps)
@@ -172,21 +172,21 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // registerObjectGroup(.jsWeakSets)
         // registerObjectGroup(.jsWeakRefs)
         // registerObjectGroup(.jsFinalizationRegistrys)
-        registerObjectGroup(.jsArrayBuffers)
+        registerObjectGroup(.jsArrayBuffers) // 1404607
         // registerObjectGroup(.jsSharedArrayBuffers)
-        for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
-            registerObjectGroup(.jsTypedArrays(variant))
-        }
-        registerObjectGroup(.jsDataViews)
+        // for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
+        //     registerObjectGroup(.jsTypedArrays(variant))
+        // }
+        registerObjectGroup(.jsDataViews) //1404607
 
         registerObjectGroup(.jsObjectConstructor)
         // registerObjectGroup(.jsPromiseConstructor)
-        registerObjectGroup(.jsArrayConstructor)
+        // registerObjectGroup(.jsArrayConstructor)
         // registerObjectGroup(.jsStringConstructor)
         // registerObjectGroup(.jsSymbolConstructor)
-        registerObjectGroup(.jsBigIntConstructor)
-        registerObjectGroup(.jsBooleanConstructor)
-        registerObjectGroup(.jsNumberConstructor)
+        // registerObjectGroup(.jsBigIntConstructor)
+        // registerObjectGroup(.jsBooleanConstructor)
+        // registerObjectGroup(.jsNumberConstructor)
         registerObjectGroup(.jsMathObject)
         // registerObjectGroup(.jsDate)
         // registerObjectGroup(.jsDateConstructor)
@@ -207,22 +207,22 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // Here it is easy to selectively disable/enable some APIs for fuzzing by
         // just commenting out the corresponding lines.
         registerBuiltin("Object", ofType: .jsObjectConstructor)
-        registerBuiltin("Array", ofType: .jsArrayConstructor)
-        registerBuiltin("Function", ofType: .jsFunctionConstructor)
+        // registerBuiltin("Array", ofType: .jsArrayConstructor)
+        // registerBuiltin("Function", ofType: .jsFunctionConstructor)
         // registerBuiltin("String", ofType: .jsStringConstructor)
-        registerBuiltin("Boolean", ofType: .jsBooleanConstructor)
-        registerBuiltin("Number", ofType: .jsNumberConstructor)
+        // registerBuiltin("Boolean", ofType: .jsBooleanConstructor)
+        // registerBuiltin("Number", ofType: .jsNumberConstructor)
         // registerBuiltin("Symbol", ofType: .jsSymbolConstructor)
-        registerBuiltin("BigInt", ofType: .jsBigIntConstructor)
+        // registerBuiltin("BigInt", ofType: .jsBigIntConstructor)
         // registerBuiltin("RegExp", ofType: .jsRegExpConstructor)
         // for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError", "URIError"] {
         //     registerBuiltin(variant, ofType: .jsErrorConstructor(variant))
         // }
         registerBuiltin("ArrayBuffer", ofType: .jsArrayBufferConstructor)
         // registerBuiltin("SharedArrayBuffer", ofType: .jsSharedArrayBufferConstructor)
-        for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
-            registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
-        }
+        // for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
+        //     registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
+        // }
         registerBuiltin("DataView", ofType: .jsDataViewConstructor)
         // registerBuiltin("Date", ofType: .jsDateConstructor)
         // registerBuiltin("Promise", ofType: .jsPromiseConstructor)
@@ -236,8 +236,8 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         registerBuiltin("Math", ofType: .jsMathObject)
         // registerBuiltin("JSON", ofType: .jsJSONObject)
         // registerBuiltin("Reflect", ofType: .jsReflectObject)
-        registerBuiltin("isNaN", ofType: .jsIsNaNFunction)
-        registerBuiltin("isFinite", ofType: .jsIsFiniteFunction)
+        // registerBuiltin("isNaN", ofType: .jsIsNaNFunction)
+        // registerBuiltin("isFinite", ofType: .jsIsFiniteFunction)
         //registerBuiltin("escape:", ofType: .jsEscapeFunction)
         //registerBuiltin("unescape:", ofType: .jsUnescapeFunction)
         //registerBuiltin("decodeURI:", ofType: .jsDecodeURIFunction)
@@ -246,11 +246,11 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         //registerBuiltin("encodeURIComponent:", ofType: .jsEncodeURIComponentFunction)
         // registerBuiltin("eval", ofType: .jsEvalFunction)
 
-        registerBuiltin("parseInt", ofType: .jsParseIntFunction)
-        registerBuiltin("parseFloat", ofType: .jsParseFloatFunction)
-        registerBuiltin("undefined", ofType: .jsUndefined)
-        registerBuiltin("NaN", ofType: .jsNaN)
-        registerBuiltin("Infinity", ofType: .jsInfinity)
+        // registerBuiltin("parseInt", ofType: .jsParseIntFunction)
+        // registerBuiltin("parseFloat", ofType: .jsParseFloatFunction)
+        // registerBuiltin("undefined", ofType: .jsUndefined)
+        // registerBuiltin("NaN", ofType: .jsNaN)
+        // registerBuiltin("Infinity", ofType: .jsInfinity)
 
         for (builtin, type) in additionalBuiltins {
             registerBuiltin(builtin, ofType: type)
@@ -459,7 +459,7 @@ public extension JSType {
     /// Type of the JavaScript Object constructor builtin.
     static let jsObjectConstructor = .functionAndConstructor([.anything...] => .object()) + .object(ofGroup: "ObjectConstructor",
     // withProperties: ["prototype"],
-    withProperties: [],
+    withProperties: ["x"],
     withMethods: ["freeze", "is"])
     // withMethods: ["assign", "fromEntries", "getOwnPropertyDescriptor", "getOwnPropertyDescriptors", "getOwnPropertyNames", "getOwnPropertySymbols", "is", "preventExtensions", "seal", "create", "defineProperties", "defineProperty", "freeze", "getPrototypeOf", "setPrototypeOf", "isExtensible", "isFrozen", "isSealed", "keys", "entries", "values"])
 
@@ -479,7 +479,7 @@ public extension JSType {
     static let jsNumberConstructor = JSType.functionAndConstructor([.anything] => .number) + .object(ofGroup: "NumberConstructor",
     // withProperties: ["prototype", "EPSILON", "MAX_SAFE_INTEGER", "MAX_VALUE", "MIN_SAFE_INTEGER", "MIN_VALUE", "NaN", "NEGATIVE_INFINITY", "POSITIVE_INFINITY"],
     withProperties: [],
-    withMethods: ["isNaN", "isFinite", "isInteger", "isSafeInteger"]
+    withMethods: []
     )
 
     /// Type of the JavaScript Symbol constructor builtin.
@@ -1047,7 +1047,8 @@ public extension ObjectGroup {
     static let jsObjectConstructor = ObjectGroup(
         name: "ObjectConstructor",
         instanceType: .jsObjectConstructor,
-        properties: [:
+        properties: [
+        "x": .object()
             // "prototype" : .object(),        // TODO
         ],
         methods: [
@@ -1185,11 +1186,11 @@ public extension ObjectGroup {
             // "NEGATIVE_INFINITY" : .number,
             // "POSITIVE_INFINITY" : .number,
         ],
-        methods: [
-            "isNaN"         : [.anything] => .boolean,
-            "isFinite"      : [.anything] => .boolean,
-            "isInteger"     : [.anything] => .boolean,
-            "isSafeInteger" : [.anything] => .boolean,
+        methods: [:
+            // "isNaN"         : [.anything] => .boolean,
+            // "isFinite"      : [.anything] => .boolean,
+            // "isInteger"     : [.anything] => .boolean,
+            // "isSafeInteger" : [.anything] => .boolean,
         ]
     )
 

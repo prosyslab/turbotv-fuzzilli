@@ -618,7 +618,7 @@ let v8Profile = Profile(
         "IteratorGenerator",
 
         // Misc
-        "TryCatchGenerator",
+        // "TryCatchGenerator", // 1404607
         "TypedArrayGenerator",
         "ImitationGenerator",
         "ResizableArrayBufferGenerator",
