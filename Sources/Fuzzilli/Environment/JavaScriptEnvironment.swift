@@ -41,9 +41,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
     // ]
 
     public static let InterestingIntegers: [Int64] = [
-        -2147483648,                   // Int32 min
         -1, 0, 1, 2, 32,        // Numbers around 0
-        2147483648
     ]
 
 
@@ -52,7 +50,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
     // Double values that are more likely to trigger edge-cases.
     // public let interestingFloats = [-Double.infinity, -Double.greatestFiniteMagnitude, -1e-15, -1e12, -1e9, -1e6, -1e3, -5.0, -4.0, -3.0, -2.0, -1.0, -Double.ulpOfOne, -Double.leastNormalMagnitude, -0.0, 0.0, Double.leastNormalMagnitude, Double.ulpOfOne, 1.0, 2.0, 3.0, 4.0, 5.0, 1e3, 1e6, 1e9, 1e12, 1e-15, Double.greatestFiniteMagnitude, Double.infinity, Double.nan]
 
-    public let interestingFloats = [-0.0, 0.0, 1.1, Double.infinity, Double.nan]
+    public let interestingFloats = [-0.0, 0.0, Double.nan]
 
     // TODO more?
     public let interestingStrings = jsTypeNames
@@ -133,8 +131,8 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
     // / Identifiers that should be used for custom properties and methods.
     // public static let CustomPropertyNames = ["a", "b", "c", "d", "e", "f", "g", "h"]
     // public static let CustomMethodNames = ["m", "n", "o", "p", "valueOf", "toString"]
-    public static let CustomPropertyNames = ["x"]
-    public static let CustomMethodNames: [String] = ["m"]
+    public static let CustomPropertyNames: [String] = []
+    public static let CustomMethodNames: [String] = []
 
 
     public private(set) var builtins = Set<String>()
@@ -172,14 +170,14 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // registerObjectGroup(.jsWeakSets)
         // registerObjectGroup(.jsWeakRefs)
         // registerObjectGroup(.jsFinalizationRegistrys)
-        registerObjectGroup(.jsArrayBuffers) // 1404607
+        // registerObjectGroup(.jsArrayBuffers) // 1404607
         // registerObjectGroup(.jsSharedArrayBuffers)
         // for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
         //     registerObjectGroup(.jsTypedArrays(variant))
         // }
-        registerObjectGroup(.jsDataViews) //1404607
+        // registerObjectGroup(.jsDataViews) //1404607
 
-        registerObjectGroup(.jsObjectConstructor)
+        // registerObjectGroup(.jsObjectConstructor)
         // registerObjectGroup(.jsPromiseConstructor)
         // registerObjectGroup(.jsArrayConstructor)
         // registerObjectGroup(.jsStringConstructor)
@@ -187,12 +185,12 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // registerObjectGroup(.jsBigIntConstructor)
         // registerObjectGroup(.jsBooleanConstructor)
         // registerObjectGroup(.jsNumberConstructor)
-        registerObjectGroup(.jsMathObject)
+        // registerObjectGroup(.jsMathObject)
         // registerObjectGroup(.jsDate)
         // registerObjectGroup(.jsDateConstructor)
         // registerObjectGroup(.jsJSONObject)
         // registerObjectGroup(.jsReflectObject)
-        registerObjectGroup(.jsArrayBufferConstructor)
+        // registerObjectGroup(.jsArrayBufferConstructor)
         // registerObjectGroup(.jsSharedArrayBufferConstructor)
         // for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError", "URIError"] {
         //     registerObjectGroup(.jsError(variant))
@@ -206,7 +204,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // Register builtins that should be available for fuzzing.
         // Here it is easy to selectively disable/enable some APIs for fuzzing by
         // just commenting out the corresponding lines.
-        registerBuiltin("Object", ofType: .jsObjectConstructor)
+        // registerBuiltin("Object", ofType: .jsObjectConstructor)
         // registerBuiltin("Array", ofType: .jsArrayConstructor)
         // registerBuiltin("Function", ofType: .jsFunctionConstructor)
         // registerBuiltin("String", ofType: .jsStringConstructor)
@@ -218,12 +216,12 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError", "URIError"] {
         //     registerBuiltin(variant, ofType: .jsErrorConstructor(variant))
         // }
-        registerBuiltin("ArrayBuffer", ofType: .jsArrayBufferConstructor)
+        // registerBuiltin("ArrayBuffer", ofType: .jsArrayBufferConstructor)
         // registerBuiltin("SharedArrayBuffer", ofType: .jsSharedArrayBufferConstructor)
         // for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array"] {
         //     registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
         // }
-        registerBuiltin("DataView", ofType: .jsDataViewConstructor)
+        // registerBuiltin("DataView", ofType: .jsDataViewConstructor)
         // registerBuiltin("Date", ofType: .jsDateConstructor)
         // registerBuiltin("Promise", ofType: .jsPromiseConstructor)
         // registerBuiltin("Proxy", ofType: .jsProxyConstructor)
@@ -233,7 +231,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // registerBuiltin("WeakSet", ofType: .jsWeakSetConstructor)
         // registerBuiltin("WeakRef", ofType: .jsWeakRefConstructor)
         // registerBuiltin("FinalizationRegistry", ofType: .jsFinalizationRegistryConstructor)
-        registerBuiltin("Math", ofType: .jsMathObject)
+        // registerBuiltin("Math", ofType: .jsMathObject)
         // registerBuiltin("JSON", ofType: .jsJSONObject)
         // registerBuiltin("Reflect", ofType: .jsReflectObject)
         // registerBuiltin("isNaN", ofType: .jsIsNaNFunction)

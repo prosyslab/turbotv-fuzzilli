@@ -673,6 +673,18 @@ let v8Profile = Profile(
         "NamedVariableLoadGenerator",
         "NamedVariableStoreGenerator",
         "SubroutineReturnGenerator",
+
+        // constrain for 1199345, 1200490, 1234764, 1234770
+        "BigIntGenerator",
+        "BooleanGenerator",
+        "BuiltinGenerator",
+        "MethodCallGenerator",
+        "ObjectLiteralGenerator",
+        "ObjectLiteralElementGenerator",
+        "ObjectLiteralPropertyGenerator",
+        "PropertyAssignmentGenerator",
+        "TryCatchGenerator",
+        "TernaryOperationGenerator",
         ],
 
     additionalBuiltins: [:]
