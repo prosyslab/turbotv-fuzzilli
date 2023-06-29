@@ -84,4 +84,8 @@ struct ScriptWriter {
         assert(currentIndention.count >= indent.count)
         currentIndention.removeLast(indent.count)
     }
+
+    public func getCurrentIndention() -> Int{
+        return self.currentIndention.count
+    }
 }

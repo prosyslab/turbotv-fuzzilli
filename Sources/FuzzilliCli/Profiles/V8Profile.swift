@@ -414,8 +414,6 @@ fileprivate let RegExpFuzzer = ProgramTemplate("RegExpFuzzer") { b in
 let v8Profile = Profile(
     processArgs: { randomize in
         var args = [
-            "--expose-gc",
-            "--omit-quit",
             "--allow-natives-syntax",
             "--fuzzing",
             "--jit-fuzzing",
@@ -426,99 +424,8 @@ let v8Profile = Profile(
         guard randomize else { return args }
 
         //
-        // Existing features that should sometimes be disabled.
-        //
-        if probability(0.1) {
-            args.append("--no-turbofan")
-        }
-
-        if probability(0.1) {
-            args.append("--no-turboshaft")
-        }
-
-        if probability(0.1) {
-            args.append("--no-maglev")
-        }
-
-        if probability(0.1) {
-            args.append("--no-sparkplug")
-        }
-
-        if probability(0.1) {
-            args.append("--no-short-builtin-calls")
-        }
-
-        //
-        // Future features that should sometimes be enabled.
-        //
-        if probability(0.25) {
-            args.append("--minor-mc")
-        }
-
-        if probability(0.25) {
-            args.append("--shared-string-table")
-        }
-
-        if probability(0.25) && !args.contains("--no-maglev") {
-            args.append("--maglev-future")
-        }
-
-        if probability(0.1) {
-            args.append("--harmony-struct")
-        }
-
-        if probability(0.1) {
-            args.append("--turboshaft-typed-optimizations")
-        }
-
-        //
-        // Sometimes enable additional verification logic (which may be fairly expensive).
-        //
-        if probability(0.1) {
-            args.append("--verify-heap")
-        }
-        if probability(0.1) {
-            args.append("--turbo-verify")
-        }
-        if probability(0.1) {
-            args.append("--turbo-verify-allocation")
-        }
-        if probability(0.1) {
-            args.append("--assert-types")
-        }
-        if probability(0.1) {
-            args.append("--turboshaft-assert-types")
-        }
-
-        //
         // More exotic configuration changes.
         //
-        if probability(0.05) {
-            args.append(probability(0.5) ? "--always-sparkplug" : "--no-always-sparkplug")
-            args.append(probability(0.5) ? "--always-osr" : "--no-always-osr")
-            args.append(probability(0.5) ? "--concurrent-osr" : "--no-concurrent-osr")
-            args.append(probability(0.5) ? "--force-slow-path" : "--no-force-slow-path")
-            if !args.contains("--no-turbofan") && !args.contains("--no-turboshaft") {
-                args.append(probability(0.5) ? "--always-turbofan" : "--no-always-turbofan")
-                args.append(probability(0.5) ? "--turbo-move-optimization" : "--no-turbo-move-optimization")
-                args.append(probability(0.5) ? "--turbo-jt" : "--no-turbo-jt")
-                args.append(probability(0.5) ? "--turbo-loop-peeling" : "--no-turbo-loop-peeling")
-                args.append(probability(0.5) ? "--turbo-loop-variable" : "--no-turbo-loop-variable")
-                args.append(probability(0.5) ? "--turbo-loop-rotation" : "--no-turbo-loop-rotation")
-                args.append(probability(0.5) ? "--turbo-cf-optimization" : "--no-turbo-cf-optimization")
-                args.append(probability(0.5) ? "--turbo-escape" : "--no-turbo-escape")
-                args.append(probability(0.5) ? "--turbo-allocation-folding" : "--no-turbo-allocation-folding")
-                args.append(probability(0.5) ? "--turbo-instruction-scheduling" : "--no-turbo-instruction-scheduling")
-                args.append(probability(0.5) ? "--turbo-stress-instruction-scheduling" : "--no-turbo-stress-instruction-scheduling")
-                args.append(probability(0.5) ? "--turbo-store-elimination" : "--no-turbo-store-elimination")
-                args.append(probability(0.5) ? "--turbo-rewrite-far-jumps" : "--no-turbo-rewrite-far-jumps")
-                args.append(probability(0.5) ? "--turbo-optimize-apply" : "--no-turbo-optimize-apply")
-                args.append(chooseUniform(from: ["--no-enable-sse3", "--no-enable-ssse3", "--no-enable-sse4-1", "--no-enable-sse4-2", "--no-enable-avx", "--no-enable-avx2"]))
-                args.append(probability(0.5) ? "--turbo-load-elimination" : "--no-turbo-load-elimination")
-                args.append(probability(0.5) ? "--turbo-inlining" : "--no-turbo-inlining")
-                args.append(probability(0.5) ? "--turbo-splitting" : "--no-turbo-splitting")
-            }
-        }
 
         return args
     },
@@ -529,8 +436,65 @@ let v8Profile = Profile(
 
     timeout: 250,
 
-    codePrefix: """
-                """,
+        codePrefix: """
+     function classOf(object) {
+       var string = Object.prototype.toString.call(object);
+       return string.substring(8, string.length - 1);
+    }
+    function deepObjectEquals(a, b) {
+      var aProps = Object.keys(a);
+      aProps.sort();
+      var bProps = Object.keys(b);
+      bProps.sort();
+      if (!deepEquals(aProps, bProps)) {
+        return false;
+      }
+      for (var i = 0; i < aProps.length; i++) {
+        if (!deepEquals(a[aProps[i]], b[aProps[i]])) {
+          return false;
+        }
+      }
+      return true;
+    }
+    function deepEquals(a, b) {
+      if (a === b) {
+        if (a === 0) return (1 / a) === (1 / b);
+        return true;
+      }
+      if (typeof a != typeof b) return false;
+      if (typeof a == 'number') return (isNaN(a) && isNaN(b)) || (a!=b);
+      if (typeof a == 'string') return a.length == 55 && a.toString().search(" GMT") !== -1;
+      if (typeof a !== 'object' && typeof a !== 'function' && typeof a !== 'symbol') return false;
+      var objectClass = classOf(a);
+      if (objectClass !== classOf(b)) return false;
+      if (objectClass === 'RegExp') {
+        return (a.toString() === b.toString());
+      }
+      if (objectClass === 'Function') return false;
+      if (objectClass === 'Array') {
+        var elementCount = 0;
+        if (a.length != b.length) {
+          return false;
+        }
+        for (var i = 0; i < a.length; i++) {
+          if (!deepEquals(a[i], b[i])) return false;
+        }
+        return true;
+      }
+      if (objectClass !== classOf(b)) return false;
+      if (objectClass === 'RegExp') {
+        return (a.toString() === b.toString());
+      }
+      if (objectClass === 'Function'|| objectClass == 'Date') return true;
+      if (objectClass == 'String' || objectClass == 'Number' ||
+          objectClass == 'Boolean') {
+        if (a.valueOf() !== b.valueOf()) return false;
+      }
+      return deepObjectEquals(a, b);
+    }
+    function opt(p0, p1){
+    """,
+
 
     codeSuffix: """
                 """,
@@ -540,26 +504,107 @@ let v8Profile = Profile(
     crashTests: ["fuzzilli('FUZZILLI_CRASH', 0)", "fuzzilli('FUZZILLI_CRASH', 1)", "fuzzilli('FUZZILLI_CRASH', 2)"],
 
     additionalCodeGenerators: [
-        (ForceJITCompilationThroughLoopGenerator,  5),
-        (ForceTurboFanCompilationGenerator,        5),
-        (ForceMaglevCompilationGenerator,          5),
-        (TurbofanVerifyTypeGenerator,             10),
-
-        (WorkerGenerator,                         10),
-        (GcGenerator,                             10),
     ],
 
     additionalProgramTemplates: WeightedList<ProgramTemplate>([
-        (MapTransitionFuzzer,    1),
-        (ValueSerializerFuzzer,  1),
-        (RegExpFuzzer,           1),
     ]),
 
-    disabledCodeGenerators: [],
+       disabledCodeGenerators: [
+        // Loop
+        "WhileLoopGenerator",
+        "DoWhileLoopGenerator",
+        "SimpleForLoopGenerator",
+        "ComplexForLoopGenerator",
+        "ForInLoopGenerator",
+        "ForOfLoopGenerator",
+        "ForOfWithDestructLoopGenerator",
+        "RepeatLoopGenerator",
+        "LoopBreakGenerator",
+        "ContinueGenerator",
 
-    additionalBuiltins: [
-        "gc"                                            : .function([] => (.undefined | .jsPromise)),
-        "d8"                                            : .object(),
-        "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
+        // Asynchronous
+        "AsyncFunctionGenerator",
+        "AsyncArrowFunctionGenerator",
+        "AsyncGeneratorFunctionGenerator",
+        "AwaitGenerator",
+        "PromiseGenerator",
+
+        // Computed
+
+        // Well-known property access
+
+        // Class
+        // "ClassGenerator",
+        "ClassConstructorGenerator",
+        // "ClassDefinitionGenerator",
+        // "ClassInstanceComputedPropertyGenerator",
+        // "ClassInstanceElementGenerator",
+        // "ClassInstanceGetterGenerator",
+        // "ClassInstanceMethodGenerator",
+        // "ClassInstancePropertyGenerator",
+        // "ClassInstanceSetterGenerator",
+        // "ClassPrivateInstanceMethodGenerator",
+        // "ClassPrivateInstancePropertyGenerator",
+        // "ClassPrivateStaticMethodGenerator",
+        // "ClassPrivateStaticPropertyGenerator",
+        // "ClassStaticComputedPropertyGenerator",
+        // "ClassStaticElementGenerator",
+        // "ClassStaticGetterGenerator",
+        // "ClassStaticInitializerGenerator",
+        // "ClassStaticMethodGenerator",
+        // "ClassStaticPropertyGenerator",
+        // "ClassStaticSetterGenerator",
+        "PrivateMethodCallGenerator",
+        "PrivatePropertyAssignmentGenerator",
+        "PrivatePropertyRetrievalGenerator",
+        "PrivatePropertyUpdateGenerator",
+        // "MethodCallGenerator", required for 1404607, 1323114
+        "MethodCallWithSpreadGenerator",
+        "ConstructorCallGenerator",
+        "ConstructorCallWithSpreadGenerator",
+        // "ConstructorGenerator",  required for 1404607
+        "SuperMethodCallGenerator",
+
+        // Object
+        // "BuiltinObjectInstanceGenerator",
+        // "ObjectWithSpreadGenerator",
+        // "ObjectBuilderFunctionGenerator",
+        "ObjectConstructorGenerator",
+        // "ObjectLiteralComputedMethodGenerator",
+        // "ObjectLiteralComputedPropertyGenerator",
+        // "ObjectLiteralCopyPropertiesGenerator",
+        // "ObjectLiteralElementGenerator",
+        // "ObjectLiteralGenerator",
+        // "ObjectLiteralGetterGenerator",
+        // "ObjectLiteralMethodGenerator",
+        // "ObjectLiteralPropertyGenerator",
+         "ObjectLiteralPrototypeGenerator",
+        // "ObjectLiteralSetterGenerator",
+        // "DestructObjectAndReassignGenerator",
+        // "DestructObjectGenerator",
+        // "PropertyAssignmentGenerator", required for 1323114
+        "PrototypeAccessGenerator",
+        "PrototypeOverwriteGenerator",
+        "ProxyGenerator",
+        // RegExp
+
+        // Function
+        "TrivialFunctionGenerator",
+        "ArrowFunctionGenerator",
+        "GeneratorFunctionGenerator",
+
+        // Symbol-related
+        "WellKnownPropertyLoadGenerator",
+        "WellKnownPropertyStoreGenerator",
+        // Misc
+        "FunctionCallWithSpreadGenerator",
+        "CallbackPropertyGenerator",
+        "JITFunctionGenerator",
+        "TryCatchGenerator",
+        "ImitationGenerator",
+        "IteratorGenerator",
+        ],
+
+    additionalBuiltins: [:
     ]
 )

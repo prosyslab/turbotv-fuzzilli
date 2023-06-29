@@ -833,6 +833,13 @@ public class JavaScriptLifter: Lifter {
                 let dest = input(0)
                 assert(dest.type === Identifier)
                 let expr = AssignmentExpression.new() + dest + " = " + input(1)
+                // let expr: Expression;
+                // // prevent paramter overwriting
+                // if (instr.input(0).number <= 1) {
+                //     expr = AssignmentExpression.new() + "v\(instr.input(0).number)" + input(1)
+                // } else {
+                //     expr = AssignmentExpression.new() + input(0) + input(1)
+                // }
                 w.reassign(instr.input(0), to: expr)
 
             case .update(let op):
@@ -1291,7 +1298,82 @@ public class JavaScriptLifter: Lifter {
         if options.contains(.includeComments), let footer = program.comments.at(.footer) {
             w.emitComment(footer)
         }
+                func find_last_output() -> Variable?{
+            let reversed = program.code.reversed()
+            for instr in reversed{
+                if instr.hasOneOutput {
+                    return instr.output
+                }
+            }
+            return nil
+        }
 
+        if (program.code.count >= 1 &&  w.getCurrentIndention() == 0) {
+            if let retvar = find_last_output() {
+                w.emit("return \(retvar);")
+            }
+        }
+        let environment = JavaScriptEnvironment(additionalBuiltins: [:], additionalObjectGroups: [])
+        var p1 = ""
+        var p2 = ""
+        let i1 = program.code.count % 5
+        switch i1 {
+            //Integer
+            case 0: 
+                p1 = String(chooseUniform(from: environment.interestingIntegers))
+                p2 = String(chooseUniform(from: environment.interestingIntegers))
+            //Float
+            case 1:
+                let f1 = chooseUniform(from: environment.interestingFloats)
+                let f2 = chooseUniform(from: environment.interestingFloats)
+                if f1.isNaN {
+                    p1 = "NaN"
+                } else if f1.isEqual(to: -Double.infinity) {
+                    p1 = "-Infinity"
+                } else if f1.isEqual(to: Double.infinity) {
+                    p1 = "Infinity"
+                } else {
+                    p1 = String(f1)
+                }
+                if f2.isNaN {
+                    p2 = "NaN"
+                } else if f2.isEqual(to: -Double.infinity) {
+                    p2 = "-Infinity"
+                } else if f2.isEqual(to: Double.infinity) {
+                    p2 = "Infinity"
+                } else {
+                    p2 = String(f2)
+                }
+            //Boolean
+            case 2: 
+                p1 = String(Bool.random())
+                p2 = String(Bool.random()) 
+            //String
+            case 3: 
+                p1 = "\"" + chooseUniform(from: environment.interestingStrings) + "\""
+                p2 = "\"" + chooseUniform(from: environment.interestingStrings) + "\"" 
+            //BigInt
+            case 4:
+                p1 = String(chooseUniform(from: environment.interestingIntegers)) + "n"
+                p2 = String(chooseUniform(from: environment.interestingIntegers)) + "n"
+            default:
+                p1 = String(chooseUniform(from: environment.interestingFloats))
+                p2 = String(chooseUniform(from: environment.interestingFloats))
+        }
+        w.emit("}")
+        w.emit("let jit_a0 = opt(\(p1), \(p2));")
+        w.emit("let jit_a0_0 = opt(\(p1), \(p2));")
+        w.emit("%PrepareFunctionForOptimization(opt);")
+        w.emit("let jit_a0_1 = opt(\(p1), \(p2));")
+        w.emit("%OptimizeFunctionOnNextCall(opt);")
+        w.emit("let jit_a2 = opt(\(p1), \(p2));")
+        w.emit("if (jit_a0 === undefined && jit_a2 === undefined){")
+        w.emit("    opt(\(p1), \(p2));")
+        w.emit("} else if (deepEquals(jit_a0, jit_a0_0) && deepEquals(jit_a0, jit_a0_1) && !deepEquals(jit_a0, jit_a2)) {")
+        w.emit("    fuzzilli('FUZZILLI_CRASH', 0);")
+        w.emit("}")
+        w.emitBlock(suffix)
+        
         w.emitBlock(suffix)
 
         return w.code
@@ -1540,13 +1622,13 @@ public class JavaScriptLifter: Lifter {
                 // The expression cannot be inlined. Now decide whether to define the output variable or not. The output variable can be omitted if:
                 //  * It is not used by any following instructions, and
                 //  * It is not an Object literal, as that would not be valid syntax (it would mistakenly be interpreted as a block statement)
-                if analyzer.numUses(of: v) == 0 && expr.type !== ObjectLiteral {
-                    emit("\(expr);")
-                } else {
+                // if analyzer.numUses(of: v) == 0 && expr.type !== ObjectLiteral {
+                //     emit("\(expr);")
+                // } else {
                     let LET = declarationKeyword(for: v)
                     let V = declare(v)
                     emit("\(LET) \(V) = \(expr);")
-                }
+                
             }
         }
 
@@ -1657,7 +1739,19 @@ public class JavaScriptLifter: Lifter {
                 if expression.isEffectful {
                     usePendingExpression(expression, forVariable: v)
                 }
-                results.append(expression)
+                //results.append(expression)
+                let exp2 = {
+                    if expression.text.starts(with: "v"){
+                        if let idx = Int(expression.text[expression.text.index(after: expression.text.startIndex)...]){
+                            // change here to adjust parameter frequency
+                            if idx <= 3 {
+                                return expression.change_text(text: "p\(idx%2)")
+                            }
+                        }
+                    }
+                    return expression
+                }()
+                results.append(exp2)
             }
 
             return results
@@ -1711,6 +1805,14 @@ public class JavaScriptLifter: Lifter {
         @discardableResult
         mutating func declare(_ v: Variable, as maybeName: String? = nil) -> String {
             assert(!expressions.contains(v))
+            //let name = maybeName ?? "v" + String(v.number)
+            // let name = {
+            //     // prevent parameter re-declaration
+            //     if v.number <= 1 {
+            //         return maybeName ?? "v" + String(v.number+2)
+            //     } else {
+            //         return maybeName ?? "v" + String(v.number)
+            //     }}()
             let name = maybeName ?? "v" + String(v.number)
             expressions[v] = Identifier.new(name)
             return name
@@ -1748,6 +1850,11 @@ public class JavaScriptLifter: Lifter {
             emitPendingExpressions()
             writer.decreaseIndentionLevel()
         }
+
+        func getCurrentIndention() -> Int {
+            return writer.getCurrentIndention()
+        }
+
 
         mutating func emit(_ line: String) {
             emitPendingExpressions()
@@ -1829,16 +1936,17 @@ public class JavaScriptLifter: Lifter {
                 // Reassignments require special handling: there is already a variable declared for the lhs,
                 // so we only need to emit the AssignmentExpression as an expression statement.
                 writer.emit("\(EXPR);")
-            } else if analyzer.numUses(of: v) > 0 {
+            // } else if analyzer.numUses(of: v) > 0 {
+                } else {
                 let LET = declarationKeyword(for: v)
                 let V = declare(v)
                 // Need to use writer.emit instead of emit here as the latter will emit all pending expressions.
                 writer.emit("\(LET) \(V) = \(EXPR);")
-            } else {
-                // Pending expressions with no uses are allowed and are for example necessary to be able to
-                // combine multiple expressions into a single comma-expression for e.g. a loop header.
-                // See the loop header lifting code and tests for examples.
-                writer.emit("\(EXPR);")
+            // } else {
+            //     // Pending expressions with no uses are allowed and are for example necessary to be able to
+            //     // combine multiple expressions into a single comma-expression for e.g. a loop header.
+            //     // See the loop header lifting code and tests for examples.
+            //     writer.emit("\(EXPR);")
             }
         }
 
