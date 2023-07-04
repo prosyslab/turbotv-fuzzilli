@@ -417,8 +417,6 @@ let v8Profile = Profile(
             "--allow-natives-syntax",
             "--fuzzing",
             "--jit-fuzzing",
-            "--future",
-            "--harmony"
         ]
 
         guard randomize else { return args }
