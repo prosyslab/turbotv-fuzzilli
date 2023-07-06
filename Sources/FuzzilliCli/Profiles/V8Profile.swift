@@ -611,6 +611,10 @@ let v8Profile = Profile(
         "TrivialFunctionGenerator",
         "ArrowFunctionGenerator",
         "GeneratorFunctionGenerator",
+        "PlainFunctionGenerator",
+        "FunctionCallGenerator",
+        "FunctionCallWithSpreadGenerator",
+
 
         // Symbol-related
         "IteratorGenerator",
