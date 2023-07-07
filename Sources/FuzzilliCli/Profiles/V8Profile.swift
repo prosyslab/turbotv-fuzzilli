@@ -569,11 +569,11 @@ let v8Profile = Profile(
         "PrivatePropertyAssignmentGenerator",
         "PrivatePropertyRetrievalGenerator",
         "PrivatePropertyUpdateGenerator",
-        // "MethodCallGenerator", required for 1404607, 1323114
+        "MethodCallGenerator", //required for 1404607, 1323114
         "MethodCallWithSpreadGenerator",
         "ConstructorCallGenerator",
         "ConstructorCallWithSpreadGenerator",
-        // "ConstructorGenerator",  required for 1404607
+         "ConstructorGenerator",  //required for 1404607
         "SuperMethodCallGenerator",
         "LoadSuperPropertyGenerator",
         "SuperPropertyAssignmentGenerator",
@@ -614,6 +614,7 @@ let v8Profile = Profile(
         "PlainFunctionGenerator",
         "FunctionCallGenerator",
         "FunctionCallWithSpreadGenerator",
+        "FunctionWithArgumentsAccessGenerator",
 
 
         // Symbol-related
