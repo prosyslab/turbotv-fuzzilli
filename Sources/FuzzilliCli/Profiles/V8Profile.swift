@@ -446,7 +446,7 @@ let v8Profile = Profile(
         return true;
       }
       if (typeof a != typeof b) return false;
-      if (typeof a == 'number') return (isNaN(a) && isNaN(b)) || (a!=b);
+      if (typeof a == 'number') return (isNaN(a) && isNaN(b)) || (a===b);
       if (typeof a == 'string') return a.length == 55 && a.toString().search(" GMT") !== -1;
       if (typeof a !== 'object' && typeof a !== 'function' && typeof a !== 'symbol') return false;
       var objectClass = classOf(a);
