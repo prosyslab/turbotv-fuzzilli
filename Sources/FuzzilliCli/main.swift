@@ -452,15 +452,19 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
                                   ecmaVersion: profile.ecmaVersion)
 
     // The evaluator to score produced samples.
-    let evaluator = ProgramCoverageEvaluator(runner: runner)
+    // let evaluator = ProgramCoverageEvaluator(runner: runner)
+    let distmapFile = ProcessInfo.processInfo.environment["DISTMAP_FILE"]!
+    let evaluator = AflgoLikeProgramCoverageEvaluator(runner: runner, distmapFile: distmapFile)
 
     // Corpus managing interesting programs that have been found during fuzzing.
     let corpus: Corpus
     switch corpusName {
     case "basic":
         corpus = BasicCorpus(minSize: minCorpusSize, maxSize: maxCorpusSize, minMutationsPerSample: minMutationsPerSample)
-    case "markov":
-        corpus = MarkovCorpus(covEvaluator: evaluator as ProgramCoverageEvaluator, dropoutRate: markovDropoutRate)
+        logger.verbose("Using basic corpus scheduler")
+    // case "markov":
+    //     corpus = MarkovCorpus(covEvaluator: evaluator as ProgramCoverageEvaluator, dropoutRate: markovDropoutRate)
+    //     logger.verbose("Using Markov corpus scheduler")
     default:
         logger.fatal("Invalid corpus name provided")
     }
