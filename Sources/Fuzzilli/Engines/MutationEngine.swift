@@ -24,6 +24,38 @@ public class MutationEngine: FuzzEngine {
         super.init(name: "MutationEngine")
     }
 
+    private func getImportants(parent: Program, child: Program) -> [Instruction] {
+        var newInstructions = [Instruction]()
+        var importants = [Instruction] ()
+        for instr in child.code {
+            var res = false
+            for pInstr in parent.code{
+                if instr == pInstr {
+                    res = true 
+                }
+            }
+            if !res {
+                newInstructions.append(instr) 
+                importants.append(instr)
+            }
+
+        }
+        for instr in newInstructions {
+            if instr.hasOneOutput {
+                let outvar = instr.output
+                for cInstr in child.code{
+                 for input in cInstr.inputs{
+                    if outvar == input{
+                        importants.append(cInstr)
+                        break
+                    }
+                 }   
+                }
+            }
+        }
+        return importants
+    }
+
     /// Perform one round of fuzzing.
     ///
     /// High-level fuzzing algorithm:
@@ -58,6 +90,8 @@ public class MutationEngine: FuzzEngine {
                     result.contributors.formUnion(parent.contributors)
                     mutator.addedInstructions(result.size - parent.size)
                     mutatedProgram = result
+                    let importants = getImportants(parent:parent, child: result)
+                    result.updateImportants(newImportants:importants)
                     break
                 } else {
                     // Try a different mutator.

@@ -38,6 +38,13 @@ public final class Program {
     /// Everything that contributed to this program. This is not preserved across protobuf serialization.
     public var contributors = Contributors()
 
+
+    public var importants = [Instruction] ()
+
+    public func updateImportants (newImportants: [Instruction]){
+        self.importants = newImportants
+    }
+
     /// Each program has a unique ID to identify it even accross different fuzzer instances.
     public private(set) lazy var id = UUID()
 

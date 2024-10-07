@@ -17,7 +17,7 @@ import Foundation
 /// The building blocks of FuzzIL code.
 ///
 /// An instruction is an operation together with in- and output variables.
-public struct Instruction {
+public struct Instruction: Equatable {
     /// The operation performed by this instruction.
     public let op: Operation
 
@@ -36,6 +36,21 @@ public struct Instruction {
 
     /// The flags associated with this instruction, right now these are mainly used during minimization.
     public var flags: Self.Flags
+
+    public static func == (l: Self, r: Self) -> Bool {
+        var res = true
+        if l.numInouts == r.numInouts {
+            res = res && (l.op.name == r.op.name)
+            for i in 0...(l.numInouts){
+                res = res && (l.inouts_[i] == r.inouts_[i])
+            } 
+            return res
+        }
+        
+        else {
+            return false
+            }
+    }
 
     /// The number of input variables of this instruction.
     public var numInputs: Int {
