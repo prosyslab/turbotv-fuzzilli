@@ -101,6 +101,12 @@ public struct Expression: CustomStringConvertible {
                           numSubexpressions: numSubexpressions + 1)
     }
 
+    func change_text(text: String) -> Expression{
+        return Expression(type: type,
+                          text: text,
+                          numSubexpressions: numSubexpressions)
+    }
+
     static func +(lhs: Expression, rhs: Expression) -> Expression {
         return lhs.extended(by: rhs)
     }

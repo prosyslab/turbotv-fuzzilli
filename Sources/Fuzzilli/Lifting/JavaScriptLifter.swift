@@ -162,7 +162,6 @@ public class JavaScriptLifter: Lifter {
             let inputs = w.retrieve(expressionsFor: instr.inputs)
             var nextExpressionToFetch = 0
             func input(_ i: Int) -> Expression {
-                assert(i == nextExpressionToFetch)
                 nextExpressionToFetch += 1
                 return inputs[i]
             }
@@ -832,7 +831,14 @@ public class JavaScriptLifter: Lifter {
             case .reassign:
                 let dest = input(0)
                 assert(dest.type === Identifier)
-                let expr = AssignmentExpression.new() + dest + " = " + input(1)
+                // let expr = AssignmentExpression.new() + dest + " = " + input(1)
+                let expr: Expression;
+                // prevent paramter overwriting
+                if (instr.input(0).number <= 1) {
+                    expr = AssignmentExpression.new() + "v\(instr.input(0).number)" + input(1)
+                } else {
+                    expr = AssignmentExpression.new() + input(0) + input(1)
+                }
                 w.reassign(instr.input(0), to: expr)
 
             case .update(let op):
@@ -1301,6 +1307,22 @@ public class JavaScriptLifter: Lifter {
             w.emitBlock(JavaScriptProbeLifting.suffixCode)
         }
 
+                func find_last_output() -> Variable?{
+            let reversed = program.code.reversed()
+            for instr in reversed{
+                if instr.hasOneOutput {
+                    return instr.output
+                }
+            }
+            return nil
+        }
+        if (program.code.count >= 1 &&  w.getCurrentIndention() == 0) {
+            if let retvar = find_last_output() {
+                w.emit("return \(retvar);")
+            }
+        }
+
+
         w.emitBlock(suffix)
 
         if options.contains(.includeComments), let footer = program.comments.at(.footer) {
@@ -1670,7 +1692,18 @@ public class JavaScriptLifter: Lifter {
                 if expression.isEffectful {
                     usePendingExpression(expression, forVariable: v)
                 }
-                results.append(expression)
+                let exp2 = {
+                    if expression.text.starts(with: "v"){
+                        if let idx = Int(expression.text[expression.text.index(after: expression.text.startIndex)...]){
+                            // change here to adjust parameter frequency
+                            if idx <= 5 {
+                                return expression.change_text(text: "p\(idx%2)")
+                            }
+                        }
+                    }
+                    return expression
+                }()
+                results.append(exp2)
             }
 
             return results
@@ -1724,7 +1757,13 @@ public class JavaScriptLifter: Lifter {
         @discardableResult
         mutating func declare(_ v: Variable, as maybeName: String? = nil) -> String {
             assert(!expressions.contains(v))
-            let name = maybeName ?? "v" + String(v.number)
+            let name = {
+                // prevent parameter re-declaration
+                if v.number <= 1 {
+                    return maybeName ?? "v" + String(v.number+2)
+                } else {
+                    return maybeName ?? "v" + String(v.number)
+                }}()
             expressions[v] = Identifier.new(name)
             return name
         }
@@ -1760,6 +1799,10 @@ public class JavaScriptLifter: Lifter {
         mutating func leaveCurrentBlock() {
             emitPendingExpressions()
             writer.decreaseIndentionLevel()
+        }
+
+        func getCurrentIndention() -> Int {
+            return writer.getCurrentIndention()
         }
 
         mutating func emit(_ line: String) {
