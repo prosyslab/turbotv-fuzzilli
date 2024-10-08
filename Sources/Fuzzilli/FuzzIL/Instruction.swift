@@ -41,9 +41,11 @@ public struct Instruction: Equatable {
         var res = true
         if l.numInouts == r.numInouts {
             res = res && (l.op.name == r.op.name)
-            for i in 0...(l.numInouts){
-                res = res && (l.inouts_[i] == r.inouts_[i])
-            } 
+            if l.numInouts > 1 { 
+                for i in 0...(l.numInouts - 1){
+                    res = res && (l.inouts_[i] == r.inouts_[i])
+                } 
+            }
             return res
         }
         

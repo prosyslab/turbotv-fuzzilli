@@ -23,18 +23,27 @@ public class BaseInstructionMutator: Mutator {
 
     override final func mutate(_ program: Program, using b: ProgramBuilder, for fuzzer: Fuzzer) -> Program? {
         beginMutation(of: program)
-
         var candidates = [Int]()
-        for instr in program.code {
+        if Int.random(in:1...3) == 1 {
+            for instr in program.importants {
+                if canMutate(instr) {
+                    candidates.append(instr.index)
+                }
+            }
+        }
+        else {
+            for instr in program.code {
             if canMutate(instr) {
                 candidates.append(instr.index)
             }
         }
+        }
+       
 
         guard candidates.count > 0 else {
             return nil
         }
-
+        print("hi2")
         var toMutate = Set<Int>()
         for _ in 0..<Int.random(in: 1...maxSimultaneousMutations) {
             toMutate.insert(chooseUniform(from: candidates))
