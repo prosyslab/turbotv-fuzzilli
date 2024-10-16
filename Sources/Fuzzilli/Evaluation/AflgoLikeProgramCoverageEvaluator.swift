@@ -1,18 +1,16 @@
 import Foundation
 
-
-
 struct AflgoLikeFuzzingContext {
     // The number of edges discovered so far
     var num_edges: UInt32 = 0
 
     var edges: Set<UInt64> = []
-    
+
     // If a basic block is reachable to the target, the entry is the float value of the distance
     var distmap: [UInt64: Double] = [:]
 }
 
-class AflgoLikeProgramOutcome : ProgramAspects {
+class AflgoLikeProgramOutcome: ProgramAspects {
     let hits: [UInt64]
 
     init(hits: [UInt64]) {
@@ -24,7 +22,6 @@ class AflgoLikeProgramOutcome : ProgramAspects {
         return hits.compactMap { distmap[$0] }.reduce(0.0, +) / Double(hits.count)
     }
 }
-
 
 public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator {
     private var context = AflgoLikeFuzzingContext()
@@ -38,13 +35,14 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
         let distmap = try! String(contentsOfFile: distmapFile).split(separator: "\n")
         for line in distmap {
             let parts = line.split(separator: " ")
-            let bb = UInt64(parts[0], radix: 16)!
+            let bb = UInt64(parts[0].split(separator: "x")[1], radix: 16)!
             let distance = Double(parts[1])!
             context.distmap[bb] = distance
         }
     }
 
     public func evaluate(_ execution: Execution) -> ProgramAspects? {
+
         assert(execution.outcome == .succeeded)
 
         // read COV_PATH from the environment
@@ -52,15 +50,24 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
         // read 'cov.cov' file which contains the coverage information
         // each line is a hex number representing a basic block hit
         let covFile = covFilePath + "/cov.cov"
+        print("hi0")
         guard let covData = try? Data(contentsOf: URL(fileURLWithPath: covFile)) else {
             return nil
         }
+        print("hello")
         let covLines = covData.split(separator: 0x0A)
 
         // convert the hex numbers to UInt64
         let hits = covLines.map { UInt64(strtoul(String(decoding: $0, as: UTF8.self), nil, 16)) }
-
+        // print(hits)
         let outcome = AflgoLikeProgramOutcome(hits: hits)
+        let fileManager: FileManager = FileManager.default
+        do {
+            try fileManager.removeItem(at: URL(fileURLWithPath: covFile))
+            print("hello2")
+        } catch let error {
+            print(error.localizedDescription)
+        }
         return outcome
     }
 
@@ -72,7 +79,7 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
 
     // used to minimize a program using the execution outcome
     public func hasAspects(_ execution: Execution, _ aspects: ProgramAspects) -> Bool {
-        return false // do not minimize
+        return false  // do not minimize
     }
 
     public var currentScore: Double {
@@ -84,17 +91,21 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
     }
 
     public func importState(_ state: Data) throws {
-        
+
     }
 
     public func resetState() {
-        
+
     }
 
-    public func computeAspectIntersection(of program: Program, with aspects: ProgramAspects) -> ProgramAspects? {
+    public func computeAspectIntersection(of program: Program, with aspects: ProgramAspects)
+        -> ProgramAspects?
+    {
         let execution = fuzzer.execute(program, purpose: .checkForDeterministicBehavior)
         guard execution.outcome == .succeeded else { return nil }
-        guard let secondOutcome = evaluate(execution) as? AflgoLikeProgramOutcome else { return nil }
+        guard let secondOutcome = evaluate(execution) as? AflgoLikeProgramOutcome else {
+            return nil
+        }
 
         let firstHits: Set<UInt64> = Set((aspects as! AflgoLikeProgramOutcome).hits)
         let secondHits: Set<UInt64> = Set(secondOutcome.hits)

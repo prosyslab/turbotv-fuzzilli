@@ -276,31 +276,31 @@ static int reprl_spawn_child(struct reprl_context* ctx)
     ctx->pid = pid;
 
     char helo[5] = { 0 };
-    if (read(ctx->ctrl_in, helo, 4) != 4) {
-        reprl_terminate_child(ctx);
-        return reprl_error(ctx, "Did not receive HELO message from child: %s", strerror(errno));
-    }
+    // if (read(ctx->ctrl_in, helo, 4) != 4) {
+    //     reprl_terminate_child(ctx);
+    //     return reprl_error(ctx, "Did not receive HELO message from child: %s", strerror(errno));
+    // }
 
-    if (strncmp(helo, "HELO", 4) != 0) {
-        reprl_terminate_child(ctx);
-        return reprl_error(ctx, "Received invalid HELO message from child: %s", helo);
-    }
+    // if (strncmp(helo, "HELO", 4) != 0) {
+    //     reprl_terminate_child(ctx);
+    //     return reprl_error(ctx, "Received invalid HELO message from child: %s", helo);
+    // }
 
-    if (write(ctx->ctrl_out, helo, 4) != 4) {
-        reprl_terminate_child(ctx);
-        return reprl_error(ctx, "Failed to send HELO reply message to child: %s", strerror(errno));
-    }
+    // if (write(ctx->ctrl_out, helo, 4) != 4) {
+    //     reprl_terminate_child(ctx);
+    //     return reprl_error(ctx, "Failed to send HELO reply message to child: %s", strerror(errno));
+    // }
 
 #ifdef __linux__
-    struct rlimit core_limit = {};
-    if (prlimit(pid, RLIMIT_CORE, NULL, &core_limit) < 0) {
-        reprl_terminate_child(ctx);
-        return reprl_error(ctx, "prlimit failed: %s\n", strerror(errno));
-    }
-    if (core_limit.rlim_cur != 0 || core_limit.rlim_max != 0) {
-        reprl_terminate_child(ctx);
-        return reprl_error(ctx, "Detected non-zero RLIMIT_CORE. Check that the child does not set RLIMIT_CORE manually.\n");
-    }
+    // struct rlimit core_limit = {};
+    // if (prlimit(pid, RLIMIT_CORE, NULL, &core_limit) < 0) {
+    //     reprl_terminate_child(ctx);
+    //     return reprl_error(ctx, "prlimit failed: %s\n", strerror(errno));
+    // }
+    // if (core_limit.rlim_cur != 0 || core_limit.rlim_max != 0) {
+    //     reprl_terminate_child(ctx);
+    //     return reprl_error(ctx, "Detected non-zero RLIMIT_CORE. Check that the child does not set RLIMIT_CORE manually.\n");
+    // }
 #endif
 
     return 0;

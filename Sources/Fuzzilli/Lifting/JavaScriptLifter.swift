@@ -43,9 +43,11 @@ public class JavaScriptLifter: Lifter {
     }
     private var forLoopHeaderStack = Stack<ForLoopHeader>()
 
-    public init(prefix: String = "",
-                suffix: String = "",
-                ecmaVersion: ECMAScriptVersion) {
+    public init(
+        prefix: String = "",
+        suffix: String = "",
+        ecmaVersion: ECMAScriptVersion
+    ) {
         self.prefix = prefix
         self.suffix = suffix
         self.version = ecmaVersion
@@ -65,7 +67,10 @@ public class JavaScriptLifter: Lifter {
         }
         analyzer.finishAnalysis()
 
-        var w = JavaScriptWriter(analyzer: analyzer, version: version, stripComments: !options.contains(.includeComments), includeLineNumbers: options.contains(.includeLineNumbers))
+        var w = JavaScriptWriter(
+            analyzer: analyzer, version: version,
+            stripComments: !options.contains(.includeComments),
+            includeLineNumbers: options.contains(.includeLineNumbers))
 
         if options.contains(.includeComments), let header = program.comments.at(.header) {
             w.emitComment(header)
@@ -102,7 +107,9 @@ public class JavaScriptLifter: Lifter {
         }
 
         for instr in program.code {
-            if options.contains(.includeComments), let comment = program.comments.at(.instruction(instr.index)) {
+            if options.contains(.includeComments),
+                let comment = program.comments.at(.instruction(instr.index))
+            {
                 w.emitComment(comment)
             }
 
@@ -140,7 +147,9 @@ public class JavaScriptLifter: Lifter {
 
                 // We need to declare all outputs of the guarded operation before the try-catch so that they are
                 // visible to subsequent code.
-                assert(instr.numInnerOutputs == 0, "Inner outputs are not currently supported in guarded operations")
+                assert(
+                    instr.numInnerOutputs == 0,
+                    "Inner outputs are not currently supported in guarded operations")
                 let neededOutputs = instr.allOutputs.filter({ analyzer.numUses(of: $0) > 0 })
                 if !neededOutputs.isEmpty {
                     let VARS = w.declareAll(neededOutputs).joined(separator: ", ")
@@ -290,7 +299,7 @@ public class JavaScriptLifter: Lifter {
                 bindVariableToThis(instr.innerOutput(0))
 
             case .endObjectLiteralGetter,
-                 .endObjectLiteralSetter:
+                .endObjectLiteralSetter:
                 w.leaveCurrentBlock()
                 w.emit("},")
 
@@ -372,8 +381,8 @@ public class JavaScriptLifter: Lifter {
                 bindVariableToThis(instr.innerOutput(0))
 
             case .endClassInstanceMethod,
-                 .endClassInstanceGetter,
-                 .endClassInstanceSetter:
+                .endClassInstanceGetter,
+                .endClassInstanceSetter:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -434,9 +443,9 @@ public class JavaScriptLifter: Lifter {
                 bindVariableToThis(instr.innerOutput(0))
 
             case .endClassStaticInitializer,
-                 .endClassStaticMethod,
-                 .endClassStaticGetter,
-                 .endClassStaticSetter:
+                .endClassStaticMethod,
+                .endClassStaticGetter,
+                .endClassStaticSetter:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -475,7 +484,7 @@ public class JavaScriptLifter: Lifter {
                 bindVariableToThis(instr.innerOutput(0))
 
             case .endClassPrivateInstanceMethod,
-                 .endClassPrivateStaticMethod:
+                .endClassPrivateStaticMethod:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -485,7 +494,8 @@ public class JavaScriptLifter: Lifter {
 
             case .createArray:
                 // When creating arrays, treat undefined elements as holes. This also relies on literals always being inlined.
-                var elems = inputs.map({ $0.text }).map({ $0 == "undefined" ? "" : $0 }).joined(separator: ",")
+                var elems = inputs.map({ $0.text }).map({ $0 == "undefined" ? "" : $0 }).joined(
+                    separator: ",")
                 if elems.last == "," || (instr.inputs.count == 1 && elems == "") {
                     // If the last element is supposed to be a hole, we need one additional comma
                     elems += ","
@@ -511,8 +521,8 @@ public class JavaScriptLifter: Lifter {
                         elems.append(text == "undefined" ? "" : text)
                     }
                 }
-                var elemString = elems.joined(separator: ",");
-                if elemString.last == "," || (instr.inputs.count==1 && elemString=="") {
+                var elemString = elems.joined(separator: ",")
+                if elemString.last == "," || (instr.inputs.count == 1 && elemString == "") {
                     // If the last element is supposed to be a hole, we need one additional commas
                     elemString += ","
                 }
@@ -527,9 +537,10 @@ public class JavaScriptLifter: Lifter {
                     parts.append("${\(VALUE)}\(op.parts[i])")
                 }
                 // See BeginCodeString case.
-                let count = Int(pow(2, Double(codeStringNestingLevel)))-1
+                let count = Int(pow(2, Double(codeStringNestingLevel))) - 1
                 let escapeSequence = String(repeating: "\\", count: count)
-                let expr = TemplateLiteral.new("\(escapeSequence)`" + parts.joined() + "\(escapeSequence)`")
+                let expr = TemplateLiteral.new(
+                    "\(escapeSequence)`" + parts.joined() + "\(escapeSequence)`")
                 w.assign(expr, to: instr.output)
 
             case .loadBuiltin(let op):
@@ -566,7 +577,8 @@ public class JavaScriptLifter: Lifter {
             case .configureProperty(let op):
                 let OBJ = input(0)
                 let PROPERTY = op.propertyName
-                let DESCRIPTOR = liftPropertyDescriptor(flags: op.flags, type: op.type, values: inputs.dropFirst())
+                let DESCRIPTOR = liftPropertyDescriptor(
+                    flags: op.flags, type: op.type, values: inputs.dropFirst())
                 w.emit("Object.defineProperty(\(OBJ), \"\(PROPERTY)\", \(DESCRIPTOR));")
 
             case .getElement(let op):
@@ -600,7 +612,8 @@ public class JavaScriptLifter: Lifter {
             case .configureElement(let op):
                 let OBJ = input(0)
                 let INDEX = op.index
-                let DESCRIPTOR = liftPropertyDescriptor(flags: op.flags, type: op.type, values: inputs.dropFirst())
+                let DESCRIPTOR = liftPropertyDescriptor(
+                    flags: op.flags, type: op.type, values: inputs.dropFirst())
                 w.emit("Object.defineProperty(\(OBJ), \(INDEX), \(DESCRIPTOR));")
 
             case .getComputedProperty(let op):
@@ -634,7 +647,8 @@ public class JavaScriptLifter: Lifter {
             case .configureComputedProperty(let op):
                 let OBJ = input(0)
                 let PROPERTY = input(1)
-                let DESCRIPTOR = liftPropertyDescriptor(flags: op.flags, type: op.type, values: inputs.dropFirst(2))
+                let DESCRIPTOR = liftPropertyDescriptor(
+                    flags: op.flags, type: op.type, values: inputs.dropFirst(2))
                 w.emit("Object.defineProperty(\(OBJ), \(PROPERTY), \(DESCRIPTOR));")
 
             case .typeOf:
@@ -688,14 +702,14 @@ public class JavaScriptLifter: Lifter {
                 liftFunctionDefinitionBegin(instr, keyword: "async function*", using: &w)
 
             case .endArrowFunction(_),
-                 .endAsyncArrowFunction:
+                .endAsyncArrowFunction:
                 w.leaveCurrentBlock()
                 w.emit("};")
 
             case .endPlainFunction(_),
-                 .endGeneratorFunction(_),
-                 .endAsyncFunction(_),
-                 .endAsyncGeneratorFunction:
+                .endGeneratorFunction(_),
+                .endAsyncFunction(_),
+                .endAsyncGeneratorFunction:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -751,7 +765,9 @@ public class JavaScriptLifter: Lifter {
             case .callFunctionWithSpread(let op):
                 let f = inputAsIdentifier(0)
                 let args = inputs.dropFirst()
-                let expr = CallExpression.new() + f + "(" + liftCallArguments(args, spreading: op.spreads) + ")"
+                let expr =
+                    CallExpression.new() + f + "(" + liftCallArguments(args, spreading: op.spreads)
+                    + ")"
                 w.assign(expr, to: instr.output)
 
             case .construct:
@@ -764,7 +780,9 @@ public class JavaScriptLifter: Lifter {
             case .constructWithSpread(let op):
                 let f = inputAsIdentifier(0)
                 let args = inputs.dropFirst()
-                let expr = NewExpression.new() + "new " + f + "(" + liftCallArguments(args, spreading: op.spreads) + ")"
+                let expr =
+                    NewExpression.new() + "new " + f + "("
+                    + liftCallArguments(args, spreading: op.spreads) + ")"
                 // For aesthetic reasons we disallow inlining "new" expressions so that their result is always assigned to a new variable.
                 w.assign(expr, to: instr.output, allowInlining: false)
 
@@ -779,7 +797,9 @@ public class JavaScriptLifter: Lifter {
                 let obj = input(0)
                 let method = MemberExpression.new() + obj + "." + op.methodName
                 let args = inputs.dropFirst()
-                let expr = CallExpression.new() + method + "(" + liftCallArguments(args, spreading: op.spreads) + ")"
+                let expr =
+                    CallExpression.new() + method + "("
+                    + liftCallArguments(args, spreading: op.spreads) + ")"
                 w.assign(expr, to: instr.output)
 
             case .callComputedMethod:
@@ -793,7 +813,9 @@ public class JavaScriptLifter: Lifter {
                 let obj = input(0)
                 let method = MemberExpression.new() + obj + "[" + input(1).text + "]"
                 let args = inputs.dropFirst(2)
-                let expr = CallExpression.new() + method + "(" + liftCallArguments(args, spreading: op.spreads) + ")"
+                let expr =
+                    CallExpression.new() + method + "("
+                    + liftCallArguments(args, spreading: op.spreads) + ")"
                 w.assign(expr, to: instr.output)
 
             case .unaryOperation(let op):
@@ -831,14 +853,7 @@ public class JavaScriptLifter: Lifter {
             case .reassign:
                 let dest = input(0)
                 assert(dest.type === Identifier)
-                // let expr = AssignmentExpression.new() + dest + " = " + input(1)
-                let expr: Expression;
-                // prevent paramter overwriting
-                if (instr.input(0).number <= 1) {
-                    expr = AssignmentExpression.new() + "v\(instr.input(0).number)" + input(1)
-                } else {
-                    expr = AssignmentExpression.new() + input(0) + input(1)
-                }
+                let expr = AssignmentExpression.new() + dest + " = " + input(1)
                 w.reassign(instr.input(0), to: expr)
 
             case .update(let op):
@@ -856,7 +871,8 @@ public class JavaScriptLifter: Lifter {
             case .destructArray(let op):
                 let outputs = w.declareAll(instr.outputs)
                 let ARRAY = input(0)
-                let PATTERN = liftArrayDestructPattern(indices: op.indices, outputs: outputs, hasRestElement: op.lastIsRest)
+                let PATTERN = liftArrayDestructPattern(
+                    indices: op.indices, outputs: outputs, hasRestElement: op.lastIsRest)
                 let LET = w.varKeyword
                 w.emit("\(LET) [\(PATTERN)] = \(ARRAY);")
 
@@ -864,13 +880,15 @@ public class JavaScriptLifter: Lifter {
                 assert(inputs.dropFirst().allSatisfy({ $0.type === Identifier }))
                 let ARRAY = input(0)
                 let outputs = inputs.dropFirst().map({ $0.text })
-                let PATTERN = liftArrayDestructPattern(indices: op.indices, outputs: outputs, hasRestElement: op.lastIsRest)
+                let PATTERN = liftArrayDestructPattern(
+                    indices: op.indices, outputs: outputs, hasRestElement: op.lastIsRest)
                 w.emit("[\(PATTERN)] = \(ARRAY);")
 
             case .destructObject(let op):
                 let outputs = w.declareAll(instr.outputs)
                 let OBJ = input(0)
-                let PATTERN = liftObjectDestructPattern(properties: op.properties, outputs: outputs, hasRestElement: op.hasRestElement)
+                let PATTERN = liftObjectDestructPattern(
+                    properties: op.properties, outputs: outputs, hasRestElement: op.hasRestElement)
                 let LET = w.varKeyword
                 w.emit("\(LET) {\(PATTERN)} = \(OBJ);")
 
@@ -878,7 +896,8 @@ public class JavaScriptLifter: Lifter {
                 assert(inputs.dropFirst().allSatisfy({ $0.type === Identifier }))
                 let OBJ = input(0)
                 let outputs = inputs.dropFirst().map({ $0.text })
-                let PATTERN = liftObjectDestructPattern(properties: op.properties, outputs: outputs, hasRestElement: op.hasRestElement)
+                let PATTERN = liftObjectDestructPattern(
+                    properties: op.properties, outputs: outputs, hasRestElement: op.hasRestElement)
                 w.emit("({\(PATTERN)} = \(OBJ));")
 
             case .compare(let op):
@@ -961,7 +980,9 @@ public class JavaScriptLifter: Lifter {
                 w.emit("\(EXPR);")
 
             case .callSuperMethod(let op):
-                let expr = CallExpression.new() + "super.\(op.methodName)(" + liftCallArguments(inputs)  + ")"
+                let expr =
+                    CallExpression.new() + "super.\(op.methodName)(" + liftCallArguments(inputs)
+                    + ")"
                 w.assign(expr, to: instr.output)
 
             case .getPrivateProperty(let op):
@@ -1110,7 +1131,8 @@ public class JavaScriptLifter: Lifter {
                     if w.isCurrentTemporaryBufferEmpty && w.numPendingExpressions == 0 {
                         // The "good" case: we can emit `let i = X, j = Y, ...`
                         assert(loopVars.count == inputs.count)
-                        let declarations = zip(loopVars, inputs).map({ "\($0) = \($1)" }).joined(separator: ", ")
+                        let declarations = zip(loopVars, inputs).map({ "\($0) = \($1)" }).joined(
+                            separator: ", ")
                         initializer = "let \(declarations)"
                         let code = w.popTemporaryOutputBuffer()
                         assert(code.isEmpty)
@@ -1125,7 +1147,8 @@ public class JavaScriptLifter: Lifter {
                             initializer = "let \(I) = (() => {\n\(CODE)    })()"
                         } else {
                             // Emit a `let [i, j, k] = (() => { ...; return [X, Y, Z]; })()`
-                            let initialLoopVarValues = inputs.map({ $0.text }).joined(separator: ", ")
+                            let initialLoopVarValues = inputs.map({ $0.text }).joined(
+                                separator: ", ")
                             w.emit("return [\(initialLoopVarValues)];")
                             let VARS = loopVars.joined(separator: ", ")
                             let CODE = w.popTemporaryOutputBuffer()
@@ -1134,7 +1157,8 @@ public class JavaScriptLifter: Lifter {
                     }
                 }
 
-                forLoopHeaderStack.push(ForLoopHeader(initializer: initializer, loopVariables: loopVars))
+                forLoopHeaderStack.push(
+                    ForLoopHeader(initializer: initializer, loopVariables: loopVars))
                 handleBeginSingleExpressionContext(with: &w, initialIndentionLevel: 2)
 
             case .beginForLoopAfterthought:
@@ -1155,16 +1179,19 @@ public class JavaScriptLifter: Lifter {
                 var CONDITION = header.condition
                 var AFTERTHOUGHT = handleEndSingleExpressionContext(with: &w)
 
-                if !INITIALIZER.contains("\n") && !CONDITION.contains("\n") && !AFTERTHOUGHT.contains("\n") {
+                if !INITIALIZER.contains("\n") && !CONDITION.contains("\n")
+                    && !AFTERTHOUGHT.contains("\n")
+                {
                     if !CONDITION.isEmpty { CONDITION = " " + CONDITION }
                     if !AFTERTHOUGHT.isEmpty { AFTERTHOUGHT = " " + AFTERTHOUGHT }
                     w.emit("for (\(INITIALIZER);\(CONDITION);\(AFTERTHOUGHT)) {")
                 } else {
-                    w.emitBlock("""
-                                for (\(INITIALIZER);
-                                    \(CONDITION);
-                                    \(AFTERTHOUGHT)) {
-                                """)
+                    w.emitBlock(
+                        """
+                        for (\(INITIALIZER);
+                            \(CONDITION);
+                            \(AFTERTHOUGHT)) {
+                        """)
                 }
 
                 w.declareAll(instr.innerOutputs, as: header.loopVariables)
@@ -1194,7 +1221,8 @@ public class JavaScriptLifter: Lifter {
 
             case .beginForOfLoopWithDestruct(let op):
                 let outputs = w.declareAll(instr.innerOutputs)
-                let PATTERN = liftArrayDestructPattern(indices: op.indices, outputs: outputs, hasRestElement: op.hasRestElement)
+                let PATTERN = liftArrayDestructPattern(
+                    indices: op.indices, outputs: outputs, hasRestElement: op.hasRestElement)
                 let LET = w.varKeyword
                 let OBJ = input(0)
                 w.emit("for (\(LET) [\(PATTERN)] of \(OBJ)) {")
@@ -1221,7 +1249,7 @@ public class JavaScriptLifter: Lifter {
                 w.emit("}")
 
             case .loopBreak(_),
-                 .switchBreak:
+                .switchBreak:
                 w.emit("break;")
 
             case .loopContinue:
@@ -1253,7 +1281,7 @@ public class JavaScriptLifter: Lifter {
             case .beginCodeString:
                 // This power series (2**n -1) is used to generate a valid escape sequence for nested template literals.
                 // Here n represents the nesting level.
-                let count = Int(pow(2, Double(codeStringNestingLevel)))-1
+                let count = Int(pow(2, Double(codeStringNestingLevel))) - 1
                 let ESCAPE = String(repeating: "\\", count: count)
                 let V = w.declare(instr.output)
                 let LET = w.declarationKeyword(for: instr.output)
@@ -1264,7 +1292,7 @@ public class JavaScriptLifter: Lifter {
             case .endCodeString:
                 codeStringNestingLevel -= 1
                 w.leaveCurrentBlock()
-                let count = Int(pow(2, Double(codeStringNestingLevel)))-1
+                let count = Int(pow(2, Double(codeStringNestingLevel))) - 1
                 let ESCAPE = String(repeating: "\\", count: count)
                 w.emit("\(ESCAPE)`;")
 
@@ -1287,7 +1315,8 @@ public class JavaScriptLifter: Lifter {
             // Handling of guarded operations, part 2: emit the guarded operation and surround it with a try-catch.
             if guarding {
                 w.emitPendingExpressions()
-                let code = w.popTemporaryOutputBuffer().trimmingCharacters(in: .whitespacesAndNewlines)
+                let code = w.popTemporaryOutputBuffer().trimmingCharacters(
+                    in: .whitespacesAndNewlines)
                 assert(!code.isEmpty)
                 let lines = code.split(separator: "\n")
                 if lines.count == 1 {
@@ -1307,33 +1336,34 @@ public class JavaScriptLifter: Lifter {
             w.emitBlock(JavaScriptProbeLifting.suffixCode)
         }
 
-                func find_last_output() -> Variable?{
+        func find_last_output() -> Variable? {
             let reversed = program.code.reversed()
-            for instr in reversed{
+            for instr in reversed {
                 if instr.hasOneOutput {
                     return instr.output
                 }
             }
             return nil
         }
-        if (program.code.count >= 1 &&  w.getCurrentIndention() == 0) {
+        if program.code.count >= 1 && w.getCurrentIndention() == 0 {
             if let retvar = find_last_output() {
                 w.emit("return \(retvar);")
             }
         }
-
 
         w.emitBlock(suffix)
 
         if options.contains(.includeComments), let footer = program.comments.at(.footer) {
             w.emitComment(footer)
         }
-
+        // print(w.code)
         return w.code
     }
 
     // Signal that the following code needs to be lifted into a single expression.
-    private func handleBeginSingleExpressionContext(with w: inout JavaScriptWriter, initialIndentionLevel: Int) {
+    private func handleBeginSingleExpressionContext(
+        with w: inout JavaScriptWriter, initialIndentionLevel: Int
+    ) {
         // Lift the following code into a temporary buffer so that it can either be emitted
         // as a single expression, or as body of a temporary function, see below.
         w.pushTemporaryOutputBuffer(initialIndentionLevel: initialIndentionLevel)
@@ -1341,7 +1371,9 @@ public class JavaScriptLifter: Lifter {
 
     // Lift all code between the begin and end of the single expression context (e.g. a loop header) into a single expression.
     // The optional result parameter contains the value to which the entire expression must ultimately evaluate.
-    private func handleEndSingleExpressionContext(result maybeResult: Expression? = nil, with w: inout JavaScriptWriter) -> String {
+    private func handleEndSingleExpressionContext(
+        result maybeResult: Expression? = nil, with w: inout JavaScriptWriter
+    ) -> String {
         if w.isCurrentTemporaryBufferEmpty {
             // This means that the code consists entirely of expressions that can be inlined, and that the result
             // variable is either not an inlined expression (but instead e.g. the identifier for a local variable), or that
@@ -1349,7 +1381,8 @@ public class JavaScriptLifter: Lifter {
             //
             // In this case, we can emit a single expression by combining all pending expressions using the comma operator.
             var COND = CommaExpression.new()
-            let expressions = w.takePendingExpressions() + (maybeResult != nil ? [maybeResult!] : [])
+            let expressions =
+                w.takePendingExpressions() + (maybeResult != nil ? [maybeResult!] : [])
             for expr in expressions {
                 if COND.text.isEmpty {
                     COND = COND + expr
@@ -1388,7 +1421,9 @@ public class JavaScriptLifter: Lifter {
         return paramList.joined(separator: ", ")
     }
 
-    private func liftFunctionDefinitionBegin(_ instr: Instruction, keyword FUNCTION: String, using w: inout JavaScriptWriter) {
+    private func liftFunctionDefinitionBegin(
+        _ instr: Instruction, keyword FUNCTION: String, using w: inout JavaScriptWriter
+    ) {
         // Function are lifted as `function f3(a4, a5, a6) { ...`.
         // This will produce functions with a recognizable .name property, which the JavaScriptExploreLifting code makes use of (see shouldTreatAsConstructor).
         guard let op = instr.op as? BeginAnyFunction else {
@@ -1404,7 +1439,9 @@ public class JavaScriptLifter: Lifter {
         }
     }
 
-    private func liftCallArguments<Arguments: Sequence>(_ args: Arguments, spreading spreads: [Bool] = []) -> String where Arguments.Element == Expression {
+    private func liftCallArguments<Arguments: Sequence>(
+        _ args: Arguments, spreading spreads: [Bool] = []
+    ) -> String where Arguments.Element == Expression {
         var arguments = [String]()
         for (i, a) in args.enumerated() {
             if spreads.count > i && spreads[i] {
@@ -1417,7 +1454,9 @@ public class JavaScriptLifter: Lifter {
         return arguments.joined(separator: ", ")
     }
 
-    private func liftPropertyDescriptor(flags: PropertyFlags, type: PropertyType, values: ArraySlice<Expression>) -> String {
+    private func liftPropertyDescriptor(
+        flags: PropertyFlags, type: PropertyType, values: ArraySlice<Expression>
+    ) -> String {
         assert(values.count <= 2)
         var parts = [String]()
         if flags.contains(.writable) {
@@ -1445,7 +1484,9 @@ public class JavaScriptLifter: Lifter {
         return "{ \(parts.joined(separator: ", ")) }"
     }
 
-    private func liftArrayDestructPattern(indices: [Int64], outputs: [String], hasRestElement: Bool) -> String {
+    private func liftArrayDestructPattern(indices: [Int64], outputs: [String], hasRestElement: Bool)
+        -> String
+    {
         assert(indices.count == outputs.count)
 
         var arrayPattern = ""
@@ -1461,7 +1502,9 @@ public class JavaScriptLifter: Lifter {
         return arrayPattern
     }
 
-    private func liftObjectDestructPattern(properties: [String], outputs: [String], hasRestElement: Bool) -> String {
+    private func liftObjectDestructPattern(
+        properties: [String], outputs: [String], hasRestElement: Bool
+    ) -> String {
         assert(outputs.count == properties.count + (hasRestElement ? 1 : 0))
 
         var objectPattern = ""
@@ -1491,13 +1534,13 @@ public class JavaScriptLifter: Lifter {
 
     private func haveSpecialHandlingForGuardedOp(_ op: Operation) -> Bool {
         switch op.opcode {
-            // We handle guarded property loads by emitting an optional chain, so no try-catch is necessary.
+        // We handle guarded property loads by emitting an optional chain, so no try-catch is necessary.
         case .getProperty,
-             .getElement,
-             .getComputedProperty,
-             .deleteProperty,
-             .deleteElement,
-             .deleteComputedProperty:
+            .getElement,
+            .getComputedProperty,
+            .deleteProperty,
+            .deleteElement,
+            .deleteComputedProperty:
             return true
         default:
             return false
@@ -1547,8 +1590,13 @@ public class JavaScriptLifter: Lifter {
         // See `reassign()` for more details about reassignment inlining.
         private var inlinedReassignments = VariableMap<Expression>()
 
-        init(analyzer: DefUseAnalyzer, version: ECMAScriptVersion, stripComments: Bool = false, includeLineNumbers: Bool = false, indent: Int = 4) {
-            self.writer = ScriptWriter(stripComments: stripComments, includeLineNumbers: includeLineNumbers, indent: indent)
+        init(
+            analyzer: DefUseAnalyzer, version: ECMAScriptVersion, stripComments: Bool = false,
+            includeLineNumbers: Bool = false, indent: Int = 4
+        ) {
+            self.writer = ScriptWriter(
+                stripComments: stripComments, includeLineNumbers: includeLineNumbers, indent: indent
+            )
             self.analyzer = analyzer
             self.varKeyword = version == .es6 ? "let" : "var"
             self.constKeyword = version == .es6 ? "const" : "var"
@@ -1575,13 +1623,13 @@ public class JavaScriptLifter: Lifter {
                 // The expression cannot be inlined. Now decide whether to define the output variable or not. The output variable can be omitted if:
                 //  * It is not used by any following instructions, and
                 //  * It is not an Object literal, as that would not be valid syntax (it would mistakenly be interpreted as a block statement)
-                if analyzer.numUses(of: v) == 0 && expr.type !== ObjectLiteral {
-                    emit("\(expr);")
-                } else {
-                    let LET = declarationKeyword(for: v)
-                    let V = declare(v)
-                    emit("\(LET) \(V) = \(expr);")
-                }
+                // if analyzer.numUses(of: v) == 0 && expr.type !== ObjectLiteral {
+                //     emit("\(expr);")
+                // } else {
+                let LET = declarationKeyword(for: v)
+                let V = declare(v)
+                emit("\(LET) \(V) = \(expr);")
+                //}
             }
         }
 
@@ -1626,7 +1674,9 @@ public class JavaScriptLifter: Lifter {
         /// Otherwise, expression inlining will change the semantics of the program.
         ///
         /// This is a mutating operation as it can modify the list of pending expressions or emit pending expression to retain the correct ordering.
-        mutating func retrieve(expressionsFor queriedVariables: ArraySlice<Variable>) -> [Expression] {
+        mutating func retrieve(expressionsFor queriedVariables: ArraySlice<Variable>)
+            -> [Expression]
+        {
             // If any of the expression for the variables is pending, then one of two things will happen:
             //
             // 1. Iff the pending expressions that are being retrieved are an exact suffix match of the pending expressions list, then these pending expressions
@@ -1662,13 +1712,16 @@ public class JavaScriptLifter: Lifter {
             //    since they can only occur once (otherwise, they wouldn't be inlined), but is important
             //    for inlined reassignments, e.g. to be able to correctly handle `foo(a = 42, a, bar(), a);`
             var queriedPendingExpressions = [Variable]()
-            for v in queriedVariables where pendingExpressions.contains(v) && !queriedPendingExpressions.contains(v) {
+            for v in queriedVariables
+            where pendingExpressions.contains(v) && !queriedPendingExpressions.contains(v) {
                 queriedPendingExpressions.append(v)
             }
             for v in queriedPendingExpressions.reversed() {
                 assert(matchingSuffixLength < pendingExpressions.count)
                 let currentSuffixPosition = pendingExpressions.count - 1 - matchingSuffixLength
-                if matchingSuffixLength < pendingExpressions.count && v == pendingExpressions[currentSuffixPosition] {
+                if matchingSuffixLength < pendingExpressions.count
+                    && v == pendingExpressions[currentSuffixPosition]
+                {
                     matchingSuffixLength += 1
                 }
             }
@@ -1693,10 +1746,13 @@ public class JavaScriptLifter: Lifter {
                     usePendingExpression(expression, forVariable: v)
                 }
                 let exp2 = {
-                    if expression.text.starts(with: "v"){
-                        if let idx = Int(expression.text[expression.text.index(after: expression.text.startIndex)...]){
+                    if expression.text.starts(with: "v") {
+                        if let idx = Int(
+                            expression.text[
+                                expression.text.index(after: expression.text.startIndex)...])
+                        {
                             // change here to adjust parameter frequency
-                            if idx <= 5 {
+                            if idx <= 40 {
                                 return expression.change_text(text: "p\(idx%2)")
                             }
                         }
@@ -1757,13 +1813,7 @@ public class JavaScriptLifter: Lifter {
         @discardableResult
         mutating func declare(_ v: Variable, as maybeName: String? = nil) -> String {
             assert(!expressions.contains(v))
-            let name = {
-                // prevent parameter re-declaration
-                if v.number <= 1 {
-                    return maybeName ?? "v" + String(v.number+2)
-                } else {
-                    return maybeName ?? "v" + String(v.number)
-                }}()
+            let name = maybeName ?? "v" + String(v.number)
             expressions[v] = Identifier.new(name)
             return name
         }
@@ -1771,7 +1821,9 @@ public class JavaScriptLifter: Lifter {
         /// Declare all of the given variables. Equivalent to calling declare() for each of them.
         /// The variable names will be constructed as prefix + v.number. By default, the prefix "v" is used.
         @discardableResult
-        mutating func declareAll<Variables: Sequence>(_ vars: Variables, usePrefix prefix: String = "v") -> [String] where Variables.Element == Variable {
+        mutating func declareAll<Variables: Sequence>(
+            _ vars: Variables, usePrefix prefix: String = "v"
+        ) -> [String] where Variables.Element == Variable {
             return vars.map({ declare($0, as: prefix + String($0.number)) })
         }
 
@@ -1832,7 +1884,9 @@ public class JavaScriptLifter: Lifter {
 
         mutating func pushTemporaryOutputBuffer(initialIndentionLevel: Int) {
             temporaryOutputBufferStack.push(writer)
-            writer = ScriptWriter(stripComments: writer.stripComments, includeLineNumbers: false, indent: writer.indent.count, initialIndentionLevel: initialIndentionLevel)
+            writer = ScriptWriter(
+                stripComments: writer.stripComments, includeLineNumbers: false,
+                indent: writer.indent.count, initialIndentionLevel: initialIndentionLevel)
         }
 
         mutating func popTemporaryOutputBuffer() -> String {
@@ -1885,16 +1939,18 @@ public class JavaScriptLifter: Lifter {
                 // Reassignments require special handling: there is already a variable declared for the lhs,
                 // so we only need to emit the AssignmentExpression as an expression statement.
                 writer.emit("\(EXPR);")
-            } else if analyzer.numUses(of: v) > 0 {
+                // } else if analyzer.numUses(of: v) > 0 {
+            } else {
                 let LET = declarationKeyword(for: v)
                 let V = declare(v)
                 // Need to use writer.emit instead of emit here as the latter will emit all pending expressions.
                 writer.emit("\(LET) \(V) = \(EXPR);")
-            } else {
-                // Pending expressions with no uses are allowed and are for example necessary to be able to
-                // combine multiple expressions into a single comma-expression for e.g. a loop header.
-                // See the loop header lifting code and tests for examples.
-                writer.emit("\(EXPR);")
+                // } else {
+                //     // Pending expressions with no uses are allowed and are for example necessary to be able to
+                //     // combine multiple expressions into a single comma-expression for e.g. a loop header.
+                //     // See the loop header lifting code and tests for examples.
+                //     writer.emit("\(EXPR);")
+                // }
             }
         }
 

@@ -26,16 +26,16 @@ public class MutationEngine: FuzzEngine {
 
     private func getImportants(parent: Program, child: Program) -> [Instruction] {
         var newInstructions = [Instruction]()
-        var importants = [Instruction] ()
+        var importants = [Instruction]()
         for instr in child.code {
             var res = false
-            for pInstr in parent.code{
+            for pInstr in parent.code {
                 if instr == pInstr {
-                    res = true 
+                    res = true
                 }
             }
             if !res {
-                newInstructions.append(instr) 
+                newInstructions.append(instr)
                 importants.append(instr)
             }
 
@@ -43,13 +43,13 @@ public class MutationEngine: FuzzEngine {
         for instr in newInstructions {
             if instr.hasOneOutput {
                 let outvar = instr.output
-                for cInstr in child.code{
-                 for input in cInstr.inputs{
-                    if outvar == input{
-                        importants.append(cInstr)
-                        break
+                for cInstr in child.code {
+                    for input in cInstr.inputs {
+                        if outvar == input {
+                            importants.append(cInstr)
+                            break
+                        }
                     }
-                 }   
                 }
             }
         }
@@ -89,9 +89,9 @@ public class MutationEngine: FuzzEngine {
                     // Success!
                     result.contributors.formUnion(parent.contributors)
                     mutator.addedInstructions(result.size - parent.size)
+                    let importants = getImportants(parent: parent, child: result)
+                    result.updateImportants(newImportants: importants)
                     mutatedProgram = result
-                    let importants = getImportants(parent:parent, child: result)
-                    result.updateImportants(newImportants:importants)
                     break
                 } else {
                     // Try a different mutator.
@@ -101,7 +101,8 @@ public class MutationEngine: FuzzEngine {
             }
 
             guard let program = mutatedProgram else {
-                logger.warning("Could not mutate sample, giving up. Sample:\n\(FuzzILLifter().lift(parent))")
+                logger.warning(
+                    "Could not mutate sample, giving up. Sample:\n\(FuzzILLifter().lift(parent))")
                 continue
             }
 

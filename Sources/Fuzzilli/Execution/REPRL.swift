@@ -44,7 +44,10 @@ public class REPRL: ComponentBase, ScriptRunner {
     /// future executions. This is only used if diagnostics mode is enabled.
     private var scriptBuffer = String()
 
-    public init(executable: String, processArguments: [String], processEnvironment: [String: String], maxExecsBeforeRespawn: Int) {
+    public init(
+        executable: String, processArguments: [String], processEnvironment: [String: String],
+        maxExecsBeforeRespawn: Int
+    ) {
         self.processArguments = [executable] + processArguments
         self.maxExecsBeforeRespawn = maxExecsBeforeRespawn
         super.init(name: "REPRL")
@@ -63,8 +66,12 @@ public class REPRL: ComponentBase, ScriptRunner {
         let argv = convertToCArray(processArguments)
         let envp = convertToCArray(env)
 
-        if reprl_initialize_context(reprlContext, argv, envp, /* capture stdout */ 1, /* capture stderr: */ 1) != 0 {
-            logger.fatal("Failed to initialize REPRL context: \(String(cString: reprl_get_last_error(reprlContext)))")
+        if reprl_initialize_context(
+            reprlContext, argv, envp, /* capture stdout */ 1, /* capture stderr: */ 1) != 0
+        {
+            logger.fatal(
+                "Failed to initialize REPRL context: \(String(cString: reprl_get_last_error(reprlContext)))"
+            )
         }
 
         freeCArray(argv, numElems: processArguments.count)
@@ -77,6 +84,56 @@ public class REPRL: ComponentBase, ScriptRunner {
 
     public func setEnvironmentVariable(_ key: String, to value: String) {
         env.append(key + "=" + value)
+    }
+
+    public func optmuzz_run(_ script: String, withTimeout timeout: UInt32) -> Execution {
+        if fuzzer.config.enableDiagnostics {
+            self.scriptBuffer += script + "\n"
+        }
+        let execution = REPRLExecution(from: self)
+        let fileManager = FileManager.default
+        let currentPath = URL(fileURLWithPath: fileManager.currentDirectoryPath)
+        let filename = String(script.hash) + ".txt"
+        let filepath = currentPath.appendingPathComponent(filename)
+        print(filepath.absoluteString)
+        do {
+            try script.write(to: filepath, atomically: false, encoding: .utf8)
+        } catch {
+            print("Error Writing Script")
+            execution.outcome = .failed(Int(-1))
+            return execution
+        }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "././d8s-instrumented/1234764/d8")
+        process.arguments = ["--allow-natives-syntax", filepath.path]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+
+            process.waitUntilExit()
+
+            let exitCode = process.terminationStatus
+            if exitCode == 0 {
+                print("d8 Process success")
+                execution.outcome = .succeeded
+            } else {
+                print("d8 Process failed with exit code: \(exitCode)")
+                execution.outcome = .failed(Int(exitCode))
+            }
+        } catch {
+            print("Error running subprocess d8 : \(error)")
+            execution.outcome = .failed(Int(-1))
+        }
+
+        // do {
+        //     try fileManager.removeItem(at: filepath)
+        //     print("Script deleted successfully.")
+        // } catch {
+        //     print("Error deleting script: \(error)")
+        // }
+
+        return execution
     }
 
     public func run(_ script: String, withTimeout timeout: UInt32) -> Execution {
@@ -105,25 +162,34 @@ public class REPRL: ComponentBase, ScriptRunner {
             }
         }
 
-        var execTime: UInt64 = 0        // In microseconds
-        let timeout = UInt64(timeout) * 1000        // In microseconds
+        var execTime: UInt64 = 0  // In microseconds
+        let timeout = UInt64(timeout) * 1000  // In microseconds
         var status: Int32 = 0
         script.withCString { ptr in
-            status = reprl_execute(reprlContext, ptr, UInt64(script.utf8.count), UInt64(timeout), &execTime, freshInstance)
+            status = reprl_execute(
+                reprlContext, ptr, UInt64(script.utf8.count), UInt64(timeout), &execTime,
+                freshInstance)
             // If we fail, we retry after a short timeout and with a fresh instance. If we still fail, we give up trying
             // to execute this program. If we repeatedly fail to execute any program, we abort.
             if status < 0 {
-                logger.warning("Script execution failed: \(String(cString: reprl_get_last_error(reprlContext))). Retrying in 1 second...")
+                logger.warning(
+                    "Script execution failed: \(String(cString: reprl_get_last_error(reprlContext))). Retrying in 1 second..."
+                )
                 if fuzzer.config.enableDiagnostics {
-                    fuzzer.dispatchEvent(fuzzer.events.DiagnosticsEvent, data: (name: "REPRLFail", content: scriptBuffer))
+                    fuzzer.dispatchEvent(
+                        fuzzer.events.DiagnosticsEvent,
+                        data: (name: "REPRLFail", content: scriptBuffer))
                 }
                 Thread.sleep(forTimeInterval: 1)
-                status = reprl_execute(reprlContext, ptr, UInt64(script.utf8.count), UInt64(timeout), &execTime, 1)
+                status = reprl_execute(
+                    reprlContext, ptr, UInt64(script.utf8.count), UInt64(timeout), &execTime, 1)
             }
         }
 
         if status < 0 {
-            logger.error("Script execution failed again: \(String(cString: reprl_get_last_error(reprlContext))). Giving up")
+            logger.error(
+                "Script execution failed again: \(String(cString: reprl_get_last_error(reprlContext))). Giving up"
+            )
             // If we weren't able to successfully execute a script in the last N attempts, abort now...
             recentlyFailedExecutions += 1
             if recentlyFailedExecutions >= 10 {

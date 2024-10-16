@@ -21,29 +21,40 @@ public class BaseInstructionMutator: Mutator {
         super.init(name: name)
     }
 
-    override final func mutate(_ program: Program, using b: ProgramBuilder, for fuzzer: Fuzzer) -> Program? {
+    override final func mutate(_ program: Program, using b: ProgramBuilder, for fuzzer: Fuzzer)
+        -> Program?
+    {
         beginMutation(of: program)
         var candidates = [Int]()
-        if Int.random(in:1...3) == 1 {
-            for instr in program.importants {
-                if canMutate(instr) {
+        // if Int.random(in: 1...3) == 1 {
+        //     for instr in program.importants {
+        //         if program.code.contains(instr) && canMutate(instr) {
+        //             print("importants added")
+        //             candidates.append(instr.index)
+        //         }
+        //     }
+        // } else {
+        //     for instr in program.code {
+        //         if canMutate(instr) {
+        //             candidates.append(instr.index)
+        //         }
+        //     }
+        // }
+
+        for instr in program.code {
+            if canMutate(instr) {
+                candidates.append(instr.index)
+                if program.importants.contains(instr) {
+                    // print("importants added")
+                    candidates.append(instr.index)
                     candidates.append(instr.index)
                 }
             }
         }
-        else {
-            for instr in program.code {
-            if canMutate(instr) {
-                candidates.append(instr.index)
-            }
-        }
-        }
-       
 
         guard candidates.count > 0 else {
             return nil
         }
-        print("hi2")
         var toMutate = Set<Int>()
         for _ in 0..<Int.random(in: 1...maxSimultaneousMutations) {
             toMutate.insert(chooseUniform(from: candidates))
@@ -77,4 +88,3 @@ public class BaseInstructionMutator: Mutator {
         fatalError("This method must be overridden")
     }
 }
-

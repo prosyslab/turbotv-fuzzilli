@@ -28,13 +28,21 @@ class MockScriptRunner: ScriptRunner {
     var processArguments: [String] = []
 
     func run(_ script: String, withTimeout timeout: UInt32) -> Execution {
-        return MockExecution(outcome: .succeeded,
-                             stdout: "",
-                             stderr: "",
-                             fuzzout: "",
-                             execTime: TimeInterval(0.1))
+        return MockExecution(
+            outcome: .succeeded,
+            stdout: "",
+            stderr: "",
+            fuzzout: "",
+            execTime: TimeInterval(0.1))
     }
-
+    func optmuzz_run(_ script: String, withTimeout timeout: UInt32) -> Execution {
+        return MockExecution(
+            outcome: .succeeded,
+            stdout: "",
+            stderr: "",
+            fuzzout: "",
+            execTime: TimeInterval(0.1))
+    }
     func setEnvironmentVariable(_ key: String, to value: String) {}
 
     func initialize(with fuzzer: Fuzzer) {}
@@ -48,7 +56,9 @@ class MockEnvironment: ComponentBase, Environment {
     var interestingIntegers: [Int64] = [1, 2, 3, 4]
     var interestingFloats: [Double] = [1.1, 2.2, 3.3]
     var interestingStrings: [String] = ["foo", "bar"]
-    var interestingRegExps: [(pattern: String, incompatibleFlags: RegExpFlags)] = [(pattern: "foo", incompatibleFlags: .empty), (pattern: "bar", incompatibleFlags: .empty)]
+    var interestingRegExps: [(pattern: String, incompatibleFlags: RegExpFlags)] = [
+        (pattern: "foo", incompatibleFlags: .empty), (pattern: "bar", incompatibleFlags: .empty),
+    ]
     var interestingRegExpQuantifiers: [String] = ["foo", "bar"]
 
     var builtins: Set<String>
@@ -115,7 +125,11 @@ class MockEnvironment: ComponentBase, Environment {
     let propertiesByGroup: [String: [String: ILType]]
     let methodsByGroup: [String: [String: Signature]]
 
-    init(builtins builtinTypes: [String: ILType], propertiesByGroup: [String: [String: ILType]] = [:], methodsByGroup: [String: [String: Signature]] = [:]) {
+    init(
+        builtins builtinTypes: [String: ILType],
+        propertiesByGroup: [String: [String: ILType]] = [:],
+        methodsByGroup: [String: [String: Signature]] = [:]
+    ) {
         self.builtinTypes = builtinTypes
         // Builtins must not be empty for now
         self.builtins = builtinTypes.isEmpty ? Set(["Foo", "Bar"]) : Set(builtinTypes.keys)
@@ -154,7 +168,9 @@ class MockEvaluator: ProgramEvaluator {
 
     func importState(_ state: Data) {}
 
-    func computeAspectIntersection(of program: Program, with aspects: ProgramAspects) -> ProgramAspects? {
+    func computeAspectIntersection(of program: Program, with aspects: ProgramAspects)
+        -> ProgramAspects?
+    {
         return nil
     }
 
@@ -162,7 +178,11 @@ class MockEvaluator: ProgramEvaluator {
 }
 
 /// Create a fuzzer instance usable for testing.
-public func makeMockFuzzer(config maybeConfiguration: Configuration? = nil, engine maybeEngine: FuzzEngine? = nil, runner maybeRunner: ScriptRunner? = nil, environment maybeEnvironment: Environment? = nil, evaluator maybeEvaluator: ProgramEvaluator? = nil, corpus maybeCorpus: Corpus? = nil) -> Fuzzer {
+public func makeMockFuzzer(
+    config maybeConfiguration: Configuration? = nil, engine maybeEngine: FuzzEngine? = nil,
+    runner maybeRunner: ScriptRunner? = nil, environment maybeEnvironment: Environment? = nil,
+    evaluator maybeEvaluator: ProgramEvaluator? = nil, corpus maybeCorpus: Corpus? = nil
+) -> Fuzzer {
     dispatchPrecondition(condition: .onQueue(DispatchQueue.main))
 
     // The configuration of this fuzzer.
@@ -173,10 +193,10 @@ public func makeMockFuzzer(config maybeConfiguration: Configuration? = nil, engi
 
     // the mutators to use for this fuzzing engine.
     let mutators = WeightedList<Mutator>([
-        (CodeGenMutator(),                  1),
-        (OperationMutator(),                1),
-        (InputMutator(isTypeAware: false),  1),
-        (CombineMutator(),                  1),
+        (CodeGenMutator(), 1),
+        (OperationMutator(), 1),
+        (InputMutator(isTypeAware: false), 1),
+        (CombineMutator(), 1),
     ])
 
     let engine = maybeEngine ?? MutationEngine(numConsecutiveMutations: 5)
@@ -185,7 +205,9 @@ public func makeMockFuzzer(config maybeConfiguration: Configuration? = nil, engi
     let evaluator = maybeEvaluator ?? MockEvaluator()
 
     // The environment containing available builtins, property names, and method names.
-    let environment = maybeEnvironment ?? MockEnvironment(builtins: ["Foo": .integer, "Bar": .object(), "Baz": .function()])
+    let environment =
+        maybeEnvironment
+        ?? MockEnvironment(builtins: ["Foo": .integer, "Bar": .object(), "Baz": .function()])
 
     // A lifter to translate FuzzIL programs to JavaScript.
     let lifter = JavaScriptLifter(prefix: "", suffix: "", ecmaVersion: .es6)
@@ -197,24 +219,27 @@ public func makeMockFuzzer(config maybeConfiguration: Configuration? = nil, engi
     let minimizer = Minimizer()
 
     // Use all builtin CodeGenerators
-    let codeGenerators = WeightedList<CodeGenerator>(CodeGenerators.map { return ($0, codeGeneratorWeights[$0.name]!) })
+    let codeGenerators = WeightedList<CodeGenerator>(
+        CodeGenerators.map { return ($0, codeGeneratorWeights[$0.name]!) })
 
     // Use all builtin ProgramTemplates
-    let programTemplates = WeightedList<ProgramTemplate>(ProgramTemplates.map { return ($0, programTemplateWeights[$0.name]!) })
+    let programTemplates = WeightedList<ProgramTemplate>(
+        ProgramTemplates.map { return ($0, programTemplateWeights[$0.name]!) })
 
     // Construct the fuzzer instance.
-    let fuzzer = Fuzzer(configuration: configuration,
-                        scriptRunner: runner,
-                        engine: engine,
-                        mutators: mutators,
-                        codeGenerators: codeGenerators,
-                        programTemplates: programTemplates,
-                        evaluator: evaluator,
-                        environment: environment,
-                        lifter: lifter,
-                        corpus: corpus,
-                        minimizer: minimizer,
-                        queue: DispatchQueue.main)
+    let fuzzer = Fuzzer(
+        configuration: configuration,
+        scriptRunner: runner,
+        engine: engine,
+        mutators: mutators,
+        codeGenerators: codeGenerators,
+        programTemplates: programTemplates,
+        evaluator: evaluator,
+        environment: environment,
+        lifter: lifter,
+        corpus: corpus,
+        minimizer: minimizer,
+        queue: DispatchQueue.main)
 
     fuzzer.registerEventListener(for: fuzzer.events.Log) { ev in
         print("[\(ev.label)] \(ev.message)")

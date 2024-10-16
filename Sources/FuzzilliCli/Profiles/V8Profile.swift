@@ -14,7 +14,9 @@
 
 import Fuzzilli
 
-fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJITCompilationThroughLoopGenerator", inputs: .required(.function())) { b, f in
+private let ForceJITCompilationThroughLoopGenerator = CodeGenerator(
+    "ForceJITCompilationThroughLoopGenerator", inputs: .required(.function())
+) { b, f in
     assert(b.type(of: f).Is(.function()))
     let arguments = b.randomArguments(forCalling: f)
 
@@ -23,43 +25,48 @@ fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJI
     }
 }
 
-fileprivate let ForceTurboFanCompilationGenerator = CodeGenerator("ForceTurboFanCompilationGenerator", inputs: .required(.function())) { b, f in
+private let ForceTurboFanCompilationGenerator = CodeGenerator(
+    "ForceTurboFanCompilationGenerator", inputs: .required(.function())
+) { b, f in
     assert(b.type(of: f).Is(.function()))
     let arguments = b.randomArguments(forCalling: f)
 
     b.callFunction(f, withArgs: arguments)
 
-    b.eval("%PrepareFunctionForOptimization(%@)", with: [f]);
+    b.eval("%PrepareFunctionForOptimization(%@)", with: [f])
 
     b.callFunction(f, withArgs: arguments)
     b.callFunction(f, withArgs: arguments)
 
-    b.eval("%OptimizeFunctionOnNextCall(%@)", with: [f]);
+    b.eval("%OptimizeFunctionOnNextCall(%@)", with: [f])
 
     b.callFunction(f, withArgs: arguments)
 }
 
-fileprivate let ForceMaglevCompilationGenerator = CodeGenerator("ForceMaglevCompilationGenerator", inputs: .required(.function())) { b, f in
+private let ForceMaglevCompilationGenerator = CodeGenerator(
+    "ForceMaglevCompilationGenerator", inputs: .required(.function())
+) { b, f in
     assert(b.type(of: f).Is(.function()))
     let arguments = b.randomArguments(forCalling: f)
 
     b.callFunction(f, withArgs: arguments)
 
-    b.eval("%PrepareFunctionForOptimization(%@)", with: [f]);
+    b.eval("%PrepareFunctionForOptimization(%@)", with: [f])
 
     b.callFunction(f, withArgs: arguments)
     b.callFunction(f, withArgs: arguments)
 
-    b.eval("%OptimizeMaglevOnNextCall(%@)", with: [f]);
+    b.eval("%OptimizeMaglevOnNextCall(%@)", with: [f])
 
     b.callFunction(f, withArgs: arguments)
 }
 
-fileprivate let TurbofanVerifyTypeGenerator = CodeGenerator("TurbofanVerifyTypeGenerator", inputs: .one) { b, v in
+private let TurbofanVerifyTypeGenerator = CodeGenerator("TurbofanVerifyTypeGenerator", inputs: .one)
+{ b, v in
     b.eval("%VerifyType(%@)", with: [v])
 }
 
-fileprivate let WorkerGenerator = RecursiveCodeGenerator("WorkerGenerator") { b in
+private let WorkerGenerator = RecursiveCodeGenerator("WorkerGenerator") { b in
     let workerSignature = Signature(withParameterCount: Int.random(in: 0...3))
 
     // TODO(cffsmith): currently Fuzzilli does not know that this code is sent
@@ -68,7 +75,8 @@ fileprivate let WorkerGenerator = RecursiveCodeGenerator("WorkerGenerator") { b 
     // and as such they are not accessible / undefined. To fix this we should
     // define an Operation attribute that tells Fuzzilli to ignore variables
     // defined in outer scopes.
-    let workerFunction = b.buildPlainFunction(with: .parameters(workerSignature.parameters)) { args in
+    let workerFunction = b.buildPlainFunction(with: .parameters(workerSignature.parameters)) {
+        args in
         let this = b.loadThis()
 
         // Generate a random onmessage handler for incoming messages.
@@ -91,7 +99,7 @@ fileprivate let WorkerGenerator = RecursiveCodeGenerator("WorkerGenerator") { b 
 }
 
 // Insert random GC calls throughout our code.
-fileprivate let GcGenerator = CodeGenerator("GcGenerator") { b in
+private let GcGenerator = CodeGenerator("GcGenerator") { b in
     let gc = b.loadBuiltin("gc")
 
     // Do minor GCs more frequently.
@@ -105,15 +113,15 @@ fileprivate let GcGenerator = CodeGenerator("GcGenerator") { b in
     b.callFunction(gc, withArgs: [b.createObject(with: ["type": type, "execution": execution])])
 }
 
-fileprivate let WasmStructGenerator = CodeGenerator("WasmStructGenerator") { b in
-    b.eval("%WasmStruct()", hasOutput: true);
+private let WasmStructGenerator = CodeGenerator("WasmStructGenerator") { b in
+    b.eval("%WasmStruct()", hasOutput: true)
 }
 
-fileprivate let WasmArrayGenerator = CodeGenerator("WasmArrayGenerator") { b in
-    b.eval("%WasmArray()", hasOutput: true);
+private let WasmArrayGenerator = CodeGenerator("WasmArrayGenerator") { b in
+    b.eval("%WasmArray()", hasOutput: true)
 }
 
-fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b in
+private let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b in
     // This template is meant to stress the v8 Map transition mechanisms.
     // Basically, it generates a bunch of CreateObject, GetProperty, SetProperty, FunctionDefinition,
     // and CallFunction operations operating on a small set of objects and property names.
@@ -150,19 +158,23 @@ fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b
     let primitiveValueGenerator = ValueGenerator("PrimitiveValue") { b, n in
         for _ in 0..<n {
             // These should roughly correspond to the supported property representations of the engine.
-            withEqualProbability({
-                b.loadInt(b.randomInt())
-            }, {
-                b.loadFloat(b.randomFloat())
-            }, {
-                b.loadString(b.randomString())
-            })
+            withEqualProbability(
+                {
+                    b.loadInt(b.randomInt())
+                },
+                {
+                    b.loadFloat(b.randomFloat())
+                },
+                {
+                    b.loadString(b.randomString())
+                })
         }
     }
     let createObjectGenerator = ValueGenerator("CreateObject") { b, n in
         for _ in 0..<n {
             let (properties, values) = randomProperties(in: b)
-            let obj = b.createObject(with: Dictionary(uniqueKeysWithValues: zip(properties, values)))
+            let obj = b.createObject(
+                with: Dictionary(uniqueKeysWithValues: zip(properties, values)))
             assert(b.type(of: obj).Is(objType))
         }
     }
@@ -191,7 +203,9 @@ fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b
         }
     }
     let objectClassGenerator = ValueGenerator("ObjectClassGenerator") { b, n in
-        let superclass = b.hasVisibleVariables && probability(0.5) ? b.randomVariable(ofType: .constructor()) : nil
+        let superclass =
+            b.hasVisibleVariables && probability(0.5)
+            ? b.randomVariable(ofType: .constructor()) : nil
         let (properties, values) = randomProperties(in: b)
         let cls = b.buildClassDefinition(withSuperclass: superclass) { cls in
             for (p, v) in zip(properties, values) {
@@ -203,20 +217,25 @@ fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b
             assert(b.type(of: obj).Is(objType))
         }
     }
-    let propertyLoadGenerator = CodeGenerator("PropertyLoad", inputs: .required(objType)) { b, obj in
+    let propertyLoadGenerator = CodeGenerator("PropertyLoad", inputs: .required(objType)) {
+        b, obj in
         assert(b.type(of: obj).Is(objType))
         b.getProperty(chooseUniform(from: propertyNames), of: obj)
     }
-    let propertyStoreGenerator = CodeGenerator("PropertyStore", inputs: .required(objType)) { b, obj in
+    let propertyStoreGenerator = CodeGenerator("PropertyStore", inputs: .required(objType)) {
+        b, obj in
         assert(b.type(of: obj).Is(objType))
         let numProperties = Int.random(in: 1...3)
         for _ in 0..<numProperties {
             b.setProperty(chooseUniform(from: propertyNames), of: obj, to: b.randomVariable())
         }
     }
-    let propertyConfigureGenerator = CodeGenerator("PropertyConfigure", inputs: .required(objType)) { b, obj in
+    let propertyConfigureGenerator = CodeGenerator("PropertyConfigure", inputs: .required(objType))
+    { b, obj in
         assert(b.type(of: obj).Is(objType))
-        b.configureProperty(chooseUniform(from: propertyNames), of: obj, usingFlags: PropertyFlags.random(), as: .value(b.randomVariable()))
+        b.configureProperty(
+            chooseUniform(from: propertyNames), of: obj, usingFlags: PropertyFlags.random(),
+            as: .value(b.randomVariable()))
     }
     let functionDefinitionGenerator = RecursiveCodeGenerator("FunctionDefinition") { b in
         // We use either a randomly generated signature or a fixed on that ensures we use our object type frequently.
@@ -235,15 +254,19 @@ fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b
             b.callFunction(f, withArgs: b.randomArguments(forCalling: f))
         }
     }
-    let functionCallGenerator = CodeGenerator("FunctionCall", inputs: .required(.function())) { b, f in
+    let functionCallGenerator = CodeGenerator("FunctionCall", inputs: .required(.function())) {
+        b, f in
         assert(b.type(of: f).Is(.function()))
         let rval = b.callFunction(f, withArgs: b.randomArguments(forCalling: f))
     }
-    let constructorCallGenerator = CodeGenerator("ConstructorCall", inputs: .required(.constructor())) { b, c in
+    let constructorCallGenerator = CodeGenerator(
+        "ConstructorCall", inputs: .required(.constructor())
+    ) { b, c in
         assert(b.type(of: c).Is(.constructor()))
         let rval = b.construct(c, withArgs: b.randomArguments(forCalling: c))
-     }
-    let functionJitCallGenerator = CodeGenerator("FunctionJitCall", inputs: .required(.function())) { b, f in
+    }
+    let functionJitCallGenerator = CodeGenerator("FunctionJitCall", inputs: .required(.function()))
+    { b, f in
         assert(b.type(of: f).Is(.function()))
         let args = b.randomArguments(forCalling: f)
         b.buildRepeatLoop(n: 100) { _ in
@@ -252,21 +275,22 @@ fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b
     }
 
     let prevCodeGenerators = b.fuzzer.codeGenerators
-    b.fuzzer.setCodeGenerators(WeightedList<CodeGenerator>([
-        (primitiveValueGenerator,     2),
-        (createObjectGenerator,       1),
-        (objectMakerGenerator,        1),
-        (objectConstructorGenerator,  1),
-        (objectClassGenerator,        1),
+    b.fuzzer.setCodeGenerators(
+        WeightedList<CodeGenerator>([
+            (primitiveValueGenerator, 2),
+            (createObjectGenerator, 1),
+            (objectMakerGenerator, 1),
+            (objectConstructorGenerator, 1),
+            (objectClassGenerator, 1),
 
-        (propertyStoreGenerator,      10),
-        (propertyLoadGenerator,       10),
-        (propertyConfigureGenerator,  5),
-        (functionDefinitionGenerator, 2),
-        (functionCallGenerator,       3),
-        (constructorCallGenerator,    2),
-        (functionJitCallGenerator,    2)
-    ]))
+            (propertyStoreGenerator, 10),
+            (propertyLoadGenerator, 10),
+            (propertyConfigureGenerator, 5),
+            (functionDefinitionGenerator, 2),
+            (functionCallGenerator, 3),
+            (constructorCallGenerator, 2),
+            (functionJitCallGenerator, 2),
+        ]))
 
     // ... run some of the ValueGenerators to create some initial objects ...
     b.buildPrefix()
@@ -283,7 +307,7 @@ fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b
     }
 }
 
-fileprivate let ValueSerializerFuzzer = ProgramTemplate("ValueSerializerFuzzer") { b in
+private let ValueSerializerFuzzer = ProgramTemplate("ValueSerializerFuzzer") { b in
     b.buildPrefix()
 
     // Create some random values that can be serialized below.
@@ -321,26 +345,26 @@ fileprivate let ValueSerializerFuzzer = ProgramTemplate("ValueSerializerFuzzer")
 
 // This template fuzzes the RegExp engine.
 // It finds bugs like: crbug.com/1437346 and crbug.com/1439691.
-fileprivate let RegExpFuzzer = ProgramTemplate("RegExpFuzzer") { b in
+private let RegExpFuzzer = ProgramTemplate("RegExpFuzzer") { b in
     // Taken from: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:v8/test/fuzzer/regexp-builtins.cc;l=212;drc=a61b95c63b0b75c1cfe872d9c8cdf927c226046e
     let twoByteSubjectString = "f\\uD83D\\uDCA9ba\\u2603"
 
     let replacementCandidates = [
-      "'X'",
-      "'$1$2$3'",
-      "'$$$&$`$\\'$1'",
-      "() => 'X'",
-      "(arg0, arg1, arg2, arg3, arg4) => arg0 + arg1 + arg2 + arg3 + arg4",
-      "() => 42"
+        "'X'",
+        "'$1$2$3'",
+        "'$$$&$`$\\'$1'",
+        "() => 'X'",
+        "(arg0, arg1, arg2, arg3, arg4) => arg0 + arg1 + arg2 + arg3 + arg4",
+        "() => 42",
     ]
 
     let lastIndices = [
-      "undefined",  "-1",         "0",
-      "1",          "2",          "3",
-      "4",          "5",          "6",
-      "7",          "8",          "9",
-      "50",         "4294967296", "2147483647",
-      "2147483648", "NaN",        "Not a Number"
+        "undefined", "-1", "0",
+        "1", "2", "3",
+        "4", "5", "6",
+        "7", "8", "9",
+        "50", "4294967296", "2147483647",
+        "2147483648", "NaN", "Not a Number",
     ]
 
     let f = b.buildPlainFunction(with: .parameters(n: 0)) { _ in
@@ -362,59 +386,74 @@ fileprivate let RegExpFuzzer = ProgramTemplate("RegExpFuzzer") { b in
 
         let resultVar = b.loadNull()
 
-        b.buildTryCatchFinally(tryBody: {
-            let symbol = b.loadBuiltin("Symbol")
-            withEqualProbability({
-                let res = b.callMethod("exec", on: regExpVar, withArgs: [subjectVar])
-                b.reassign(resultVar, to: res)
-            }, {
-                let prop = b.getProperty("match", of: symbol)
-                let res = b.callComputedMethod(prop, on: regExpVar, withArgs: [subjectVar])
-                b.reassign(resultVar, to: res)
-            }, {
-                let prop = b.getProperty("replace", of: symbol)
-                let replacement = withEqualProbability({
-                    b.loadString(b.randomString())
-                }, {
-                    b.loadString(chooseUniform(from: replacementCandidates))
-                })
-                let res = b.callComputedMethod(prop, on: regExpVar, withArgs: [subjectVar, replacement])
-                b.reassign(resultVar, to: res)
-            }, {
-                let prop = b.getProperty("search", of: symbol)
-                let res = b.callComputedMethod(prop, on: regExpVar, withArgs: [subjectVar])
-                b.reassign(resultVar, to: res)
-            }, {
-                let prop = b.getProperty("split", of: symbol)
-                let randomSplitLimit = withEqualProbability({
-                    "undefined"
-                }, {
-                    "'not a number'"
-                }, {
-                    String(b.randomInt())
-                })
-                let limit = b.loadString(randomSplitLimit)
-                let res = b.callComputedMethod(symbol, on: regExpVar, withArgs: [subjectVar, limit])
-                b.reassign(resultVar, to: res)
-            }, {
-                let res = b.callMethod("test", on: regExpVar, withArgs: [subjectVar])
-                b.reassign(resultVar, to: res)
+        b.buildTryCatchFinally(
+            tryBody: {
+                let symbol = b.loadBuiltin("Symbol")
+                withEqualProbability(
+                    {
+                        let res = b.callMethod("exec", on: regExpVar, withArgs: [subjectVar])
+                        b.reassign(resultVar, to: res)
+                    },
+                    {
+                        let prop = b.getProperty("match", of: symbol)
+                        let res = b.callComputedMethod(prop, on: regExpVar, withArgs: [subjectVar])
+                        b.reassign(resultVar, to: res)
+                    },
+                    {
+                        let prop = b.getProperty("replace", of: symbol)
+                        let replacement = withEqualProbability(
+                            {
+                                b.loadString(b.randomString())
+                            },
+                            {
+                                b.loadString(chooseUniform(from: replacementCandidates))
+                            })
+                        let res = b.callComputedMethod(
+                            prop, on: regExpVar, withArgs: [subjectVar, replacement])
+                        b.reassign(resultVar, to: res)
+                    },
+                    {
+                        let prop = b.getProperty("search", of: symbol)
+                        let res = b.callComputedMethod(prop, on: regExpVar, withArgs: [subjectVar])
+                        b.reassign(resultVar, to: res)
+                    },
+                    {
+                        let prop = b.getProperty("split", of: symbol)
+                        let randomSplitLimit = withEqualProbability(
+                            {
+                                "undefined"
+                            },
+                            {
+                                "'not a number'"
+                            },
+                            {
+                                String(b.randomInt())
+                            })
+                        let limit = b.loadString(randomSplitLimit)
+                        let res = b.callComputedMethod(
+                            symbol, on: regExpVar, withArgs: [subjectVar, limit])
+                        b.reassign(resultVar, to: res)
+                    },
+                    {
+                        let res = b.callMethod("test", on: regExpVar, withArgs: [subjectVar])
+                        b.reassign(resultVar, to: res)
+                    })
+            },
+            catchBody: { _ in
             })
-        }, catchBody: { _ in
-        })
 
         b.build(n: 7)
 
         b.doReturn(resultVar)
     }
 
-    b.eval("%SetForceSlowPath(false)");
+    b.eval("%SetForceSlowPath(false)")
     // compile the regexp once
     b.callFunction(f)
     let resFast = b.callFunction(f)
-    b.eval("%SetForceSlowPath(true)");
+    b.eval("%SetForceSlowPath(true)")
     let resSlow = b.callFunction(f)
-    b.eval("%SetForceSlowPath(false)");
+    b.eval("%SetForceSlowPath(false)")
 
     b.build(n: 15)
 }
@@ -422,15 +461,15 @@ fileprivate let RegExpFuzzer = ProgramTemplate("RegExpFuzzer") { b in
 let v8Profile = Profile(
     processArgs: { randomize in
         var args = [
-            "--expose-gc",
-            "--omit-quit",
+            // "--expose-gc",
+            // "--omit-quit",
             "--allow-natives-syntax",
             "--fuzzing",
             "--jit-fuzzing",
             "--future",
             "--harmony",
-            "--js-staging",
-            "--wasm-staging"
+            // "--js-staging",
+            // "--wasm-staging",
         ]
 
         guard randomize else { return args }
@@ -438,140 +477,157 @@ let v8Profile = Profile(
         //
         // Existing features that should sometimes be disabled.
         //
-        if probability(0.1) {
-            args.append("--no-turbofan")
-        }
+        // if probability(0.1) {
+        //     args.append("--no-turbofan")
+        // }
 
-        if probability(0.1) {
-            args.append("--no-turboshaft")
-        }
+        // if probability(0.1) {
+        //     args.append("--no-turboshaft")
+        // }
 
-        if probability(0.1) {
-            args.append("--no-maglev")
-        }
+        // if probability(0.1) {
+        //     args.append("--no-maglev")
+        // }
 
-        if probability(0.1) {
-            args.append("--no-sparkplug")
-        }
+        // if probability(0.1) {
+        //     args.append("--no-sparkplug")
+        // }
 
-        if probability(0.1) {
-            args.append("--no-short-builtin-calls")
-        }
+        // if probability(0.1) {
+        //     args.append("--no-short-builtin-calls")
+        // }
 
-        //
-        // Future features that should sometimes be enabled.
-        //
-        if probability(0.5) {
-            // A (fixed) random seed can make crashes (and the engine in general) more deterministic.
-            let seed = Int32.random(in: Int32.min...Int32.max)
-            args.append("--random-seed=\(seed)")
-        }
+        // //
+        // // Future features that should sometimes be enabled.
+        // //
+        // if probability(0.5) {
+        //     // A (fixed) random seed can make crashes (and the engine in general) more deterministic.
+        //     let seed = Int32.random(in: Int32.min...Int32.max)
+        //     args.append("--random-seed=\(seed)")
+        // }
 
-        if probability(0.25) {
-            args.append("--minor-ms")
-        }
+        // if probability(0.25) {
+        //     args.append("--minor-ms")
+        // }
 
-        if probability(0.25) {
-            args.append("--shared-string-table")
-        }
+        // if probability(0.25) {
+        //     args.append("--shared-string-table")
+        // }
 
-        if probability(0.25) && !args.contains("--no-maglev") {
-            args.append("--maglev-future")
-        }
+        // if probability(0.25) && !args.contains("--no-maglev") {
+        //     args.append("--maglev-future")
+        // }
 
-        if probability(0.25) && !args.contains("--no-turboshaft") {
-            args.append("--turboshaft-future")
-        }
+        // if probability(0.25) && !args.contains("--no-turboshaft") {
+        //     args.append("--turboshaft-future")
+        // }
 
-        if probability(0.1) && !args.contains("--no-turboshaft") {
-            args.append("--turboshaft-typed-optimizations")
-        }
+        // if probability(0.1) && !args.contains("--no-turboshaft") {
+        //     args.append("--turboshaft-typed-optimizations")
+        // }
 
-        if probability(0.1) && !args.contains("--no-turboshaft") {
-            args.append("--turboshaft-from-maglev")
-        }
+        // if probability(0.1) && !args.contains("--no-turboshaft") {
+        //     args.append("--turboshaft-from-maglev")
+        // }
 
-        if probability(0.1) {
-            args.append("--harmony-struct")
-        }
+        // if probability(0.1) {
+        //     args.append("--harmony-struct")
+        // }
 
-        if probability(0.1) {
-            args.append("--efficiency-mode")
-        }
+        // if probability(0.1) {
+        //     args.append("--efficiency-mode")
+        // }
 
-        if probability(0.1) {
-            args.append("--battery-saver-mode")
-        }
+        // if probability(0.1) {
+        //     args.append("--battery-saver-mode")
+        // }
 
         //
         // Sometimes enable additional verification/stressing logic (which may be fairly expensive).
         //
-        if probability(0.1) {
-            args.append("--verify-heap")
-        }
-        if probability(0.1) {
-            args.append("--turbo-verify")
-        }
-        if probability(0.1) {
-            args.append("--turbo-verify-allocation")
-        }
-        if probability(0.1) {
-            args.append("--assert-types")
-        }
-        if probability(0.1) {
-            args.append("--turboshaft-assert-types")
-        }
-        if probability(0.1) {
-            args.append("--deopt-every-n-times=\(chooseUniform(from: [100, 250, 500, 1000, 2500, 5000, 10000]))")
-        }
-        if probability(0.1) {
-            args.append("--stress-ic")
-        }
-        if probability(0.1) {
-            args.append("--optimize-on-next-call-optimizes-to-maglev")
-        }
+        // if probability(0.1) {
+        //     args.append("--verify-heap")
+        // }
+        // if probability(0.1) {
+        //     args.append("--turbo-verify")
+        // }
+        // if probability(0.1) {
+        //     args.append("--turbo-verify-allocation")
+        // }
+        // if probability(0.1) {
+        //     args.append("--assert-types")
+        // }
+        // if probability(0.1) {
+        //     args.append("--turboshaft-assert-types")
+        // }
+        // if probability(0.1) {
+        //     args.append(
+        //         "--deopt-every-n-times=\(chooseUniform(from: [100, 250, 500, 1000, 2500, 5000, 10000]))"
+        //     )
+        // }
+        // if probability(0.1) {
+        //     args.append("--stress-ic")
+        // }
+        // if probability(0.1) {
+        //     args.append("--optimize-on-next-call-optimizes-to-maglev")
+        // }
 
         //
         // More exotic configuration changes.
         //
-        if probability(0.05) {
-            if probability(0.5) { args.append("--stress-gc-during-compilation") }
-            if probability(0.5) { args.append("--lazy-new-space-shrinking") }
-            if probability(0.5) { args.append("--const-tracking-let") }
-            if probability(0.5) { args.append("--stress-wasm-memory-moving") }
-            if probability(0.5) { args.append("--stress-background-compile") }
-            if probability(0.5) { args.append("--parallel-compile-tasks-for-lazy") }
-            if probability(0.5) { args.append("--parallel-compile-tasks-for-eager-toplevel") }
+        // if probability(0.05) {
+        //     if probability(0.5) { args.append("--stress-gc-during-compilation") }
+        //     if probability(0.5) { args.append("--lazy-new-space-shrinking") }
+        //     if probability(0.5) { args.append("--const-tracking-let") }
+        //     if probability(0.5) { args.append("--stress-wasm-memory-moving") }
+        //     if probability(0.5) { args.append("--stress-background-compile") }
+        //     if probability(0.5) { args.append("--parallel-compile-tasks-for-lazy") }
+        //     if probability(0.5) { args.append("--parallel-compile-tasks-for-eager-toplevel") }
 
-            args.append(probability(0.5) ? "--always-sparkplug" : "--no-always-sparkplug")
-            args.append(probability(0.5) ? "--always-osr" : "--no-always-osr")
-            args.append(probability(0.5) ? "--concurrent-osr" : "--no-concurrent-osr")
-            args.append(probability(0.5) ? "--force-slow-path" : "--no-force-slow-path")
+        //     args.append(probability(0.5) ? "--always-sparkplug" : "--no-always-sparkplug")
+        //     args.append(probability(0.5) ? "--always-osr" : "--no-always-osr")
+        //     args.append(probability(0.5) ? "--concurrent-osr" : "--no-concurrent-osr")
+        //     args.append(probability(0.5) ? "--force-slow-path" : "--no-force-slow-path")
 
-            // Maglev related flags
-            args.append(probability(0.5) ? "--maglev-inline-api-calls" : "--no-maglev-inline-api-calls")
-            if probability(0.5) { args.append("--maglev-extend-properties-backing-store") }
+        //     // Maglev related flags
+        //     args.append(
+        //         probability(0.5) ? "--maglev-inline-api-calls" : "--no-maglev-inline-api-calls")
+        //     if probability(0.5) { args.append("--maglev-extend-properties-backing-store") }
 
-            // Compiler related flags
-            args.append(probability(0.5) ? "--always-turbofan" : "--no-always-turbofan")
-            args.append(probability(0.5) ? "--turbo-move-optimization" : "--no-turbo-move-optimization")
-            args.append(probability(0.5) ? "--turbo-jt" : "--no-turbo-jt")
-            args.append(probability(0.5) ? "--turbo-loop-peeling" : "--no-turbo-loop-peeling")
-            args.append(probability(0.5) ? "--turbo-loop-variable" : "--no-turbo-loop-variable")
-            args.append(probability(0.5) ? "--turbo-loop-rotation" : "--no-turbo-loop-rotation")
-            args.append(probability(0.5) ? "--turbo-cf-optimization" : "--no-turbo-cf-optimization")
-            args.append(probability(0.5) ? "--turbo-escape" : "--no-turbo-escape")
-            args.append(probability(0.5) ? "--turbo-allocation-folding" : "--no-turbo-allocation-folding")
-            args.append(probability(0.5) ? "--turbo-instruction-scheduling" : "--no-turbo-instruction-scheduling")
-            args.append(probability(0.5) ? "--turbo-stress-instruction-scheduling" : "--no-turbo-stress-instruction-scheduling")
-            args.append(probability(0.5) ? "--turbo-store-elimination" : "--no-turbo-store-elimination")
-            args.append(probability(0.5) ? "--turbo-rewrite-far-jumps" : "--no-turbo-rewrite-far-jumps")
-            args.append(probability(0.5) ? "--turbo-optimize-apply" : "--no-turbo-optimize-apply")
-            args.append(chooseUniform(from: ["--no-enable-sse3", "--no-enable-ssse3", "--no-enable-sse4-1", "--no-enable-sse4-2", "--no-enable-avx", "--no-enable-avx2"]))
-            args.append(probability(0.5) ? "--turbo-load-elimination" : "--no-turbo-load-elimination")
-            args.append(probability(0.5) ? "--turbo-inlining" : "--no-turbo-inlining")
-            args.append(probability(0.5) ? "--turbo-splitting" : "--no-turbo-splitting")
-        }
+        //     // Compiler related flags
+        //     args.append(probability(0.5) ? "--always-turbofan" : "--no-always-turbofan")
+        //     args.append(
+        //         probability(0.5) ? "--turbo-move-optimization" : "--no-turbo-move-optimization")
+        //     args.append(probability(0.5) ? "--turbo-jt" : "--no-turbo-jt")
+        //     args.append(probability(0.5) ? "--turbo-loop-peeling" : "--no-turbo-loop-peeling")
+        //     args.append(probability(0.5) ? "--turbo-loop-variable" : "--no-turbo-loop-variable")
+        //     args.append(probability(0.5) ? "--turbo-loop-rotation" : "--no-turbo-loop-rotation")
+        //     args.append(probability(0.5) ? "--turbo-cf-optimization" : "--no-turbo-cf-optimization")
+        //     args.append(probability(0.5) ? "--turbo-escape" : "--no-turbo-escape")
+        //     args.append(
+        //         probability(0.5) ? "--turbo-allocation-folding" : "--no-turbo-allocation-folding")
+        //     args.append(
+        //         probability(0.5)
+        //             ? "--turbo-instruction-scheduling" : "--no-turbo-instruction-scheduling")
+        //     args.append(
+        //         probability(0.5)
+        //             ? "--turbo-stress-instruction-scheduling"
+        //             : "--no-turbo-stress-instruction-scheduling")
+        //     args.append(
+        //         probability(0.5) ? "--turbo-store-elimination" : "--no-turbo-store-elimination")
+        //     args.append(
+        //         probability(0.5) ? "--turbo-rewrite-far-jumps" : "--no-turbo-rewrite-far-jumps")
+        //     args.append(probability(0.5) ? "--turbo-optimize-apply" : "--no-turbo-optimize-apply")
+        //     args.append(
+        //         chooseUniform(from: [
+        //             "--no-enable-sse3", "--no-enable-ssse3", "--no-enable-sse4-1",
+        //             "--no-enable-sse4-2", "--no-enable-avx", "--no-enable-avx2",
+        //         ]))
+        //     args.append(
+        //         probability(0.5) ? "--turbo-load-elimination" : "--no-turbo-load-elimination")
+        //     args.append(probability(0.5) ? "--turbo-inlining" : "--no-turbo-inlining")
+        //     args.append(probability(0.5) ? "--turbo-splitting" : "--no-turbo-splitting")
+        // }
 
         return args
     },
@@ -582,82 +638,90 @@ let v8Profile = Profile(
     maxExecsBeforeRespawn: 1000,
 
     timeout: 250,
+    // codePrefix: """
+    // """,
+    // codeSuffix: """
+    // """,
 
-codePrefix: """
-     function classOf(object) {
-       var string = Object.prototype.toString.call(object);
-       return string.substring(8, string.length - 1);
-    }
-    function deepObjectEquals(a, b) {
-      var aProps = Object.keys(a);
-      aProps.sort();
-      var bProps = Object.keys(b);
-      bProps.sort();
-      if (!deepEquals(aProps, bProps)) {
-        return false;
-      }
-      for (var i = 0; i < aProps.length; i++) {
-        if (!deepEquals(a[aProps[i]], b[aProps[i]])) {
-          return false;
+    codePrefix: """
+         function classOf(object) {
+           var string = Object.prototype.toString.call(object);
+           return string.substring(8, string.length - 1);
         }
-      }
-      return true;
-    }
-    function deepEquals(a, b) {
-      if (a === b) {
-        if (a === 0) return (1 / a) === (1 / b);
-        return true;
-      }
-      if (typeof a != typeof b) return false;
-      if (typeof a == 'number') return (isNaN(a) && isNaN(b)) || (a!=b);
-      if (typeof a == 'string') return a.length == 55 && a.toString().search(" GMT") !== -1;
-      if (typeof a !== 'object' && typeof a !== 'function' && typeof a !== 'symbol') return false;
-      var objectClass = classOf(a);
-      if (objectClass !== classOf(b)) return false;
-      if (objectClass === 'RegExp') {
-        return (a.toString() === b.toString());
-      }
-      if (objectClass === 'Function') return false;
-      if (objectClass === 'Array') {
-        var elementCount = 0;
-        if (a.length != b.length) {
-          return false;
+        function deepObjectEquals(a, b) {
+          var aProps = Object.keys(a);
+          aProps.sort();
+          var bProps = Object.keys(b);
+          bProps.sort();
+          if (!deepEquals(aProps, bProps)) {
+            return false;
+          }
+          for (var i = 0; i < aProps.length; i++) {
+            if (!deepEquals(a[aProps[i]], b[aProps[i]])) {
+              return false;
+            }
+          }
+          return true;
         }
-        for (var i = 0; i < a.length; i++) {
-          if (!deepEquals(a[i], b[i])) return false;
+        function deepEquals(a, b) {
+          if (a === b) {
+            if (a === 0) return (1 / a) === (1 / b);
+            return true;
+          }
+          if (typeof a != typeof b) return false;
+          if (typeof a == 'number') return (isNaN(a) && isNaN(b)) || (a!=b);
+          if (typeof a == 'string') return a.length == 55 && a.toString().search(" GMT") !== -1;
+          if (typeof a !== 'object' && typeof a !== 'function' && typeof a !== 'symbol') return false;
+          var objectClass = classOf(a);
+          if (objectClass !== classOf(b)) return false;
+          if (objectClass === 'RegExp') {
+            return (a.toString() === b.toString());
+          }
+          if (objectClass === 'Function') return false;
+          if (objectClass === 'Array') {
+            var elementCount = 0;
+            if (a.length != b.length) {
+              return false;
+            }
+            for (var i = 0; i < a.length; i++) {
+              if (!deepEquals(a[i], b[i])) return false;
+            }
+            return true;
+          }
+          if (objectClass !== classOf(b)) return false;
+          if (objectClass === 'RegExp') {
+            return (a.toString() === b.toString());
+          }
+          if (objectClass === 'Function') return true;
+          if (objectClass == 'String' || objectClass == 'Number' ||
+              objectClass == 'Boolean' || objectClass == 'Date') {
+            if (a.valueOf() !== b.valueOf()) return false;
+          }
+          return deepObjectEquals(a, b);
         }
-        return true;
-      }
-      if (objectClass !== classOf(b)) return false;
-      if (objectClass === 'RegExp') {
-        return (a.toString() === b.toString());
-      }
-      if (objectClass === 'Function') return true;
-      if (objectClass == 'String' || objectClass == 'Number' ||
-          objectClass == 'Boolean' || objectClass == 'Date') {
-        if (a.valueOf() !== b.valueOf()) return false;
-      }
-      return deepObjectEquals(a, b);
-    }
-    function opt(p0, p1){
-    """,
+        function opt(p0, p1){
+        """,
 
     codeSuffix: """
-     }
-    let jit_a0 = opt(1, 2);
-    opt(true, -0.0);
-    let jit_a0_0 = opt(1, 2);
-    %PrepareFunctionForOptimization(opt);
-    let jit_a0_1 = opt(1, 2);
-    opt(0.5, 3);
-    %OptimizeFunctionOnNextCall(opt)
-    let jit_a2 = opt(1, 2);
-    if (jit_a0 === undefined && jit_a2 === undefined){
-        opt(1, 2);
-    } else if (deepEquals(jit_a0, jit_a0_0) && deepEquals(jit_a0, jit_a0_1) && !deepEquals(jit_a0, jit_a2)) {
-        fuzzilli('FUZZILLI_CRASH', 0);
-    }
-    """,
+         }
+         %PrepareFunctionForOptimization(opt);
+        opt(1, 0);
+        %OptimizeFunctionOnNextCall(opt);
+        opt(1, 0); 
+        // let jit_a0 = opt(1, 0);
+        // opt(1, 0);
+        // let jit_a0_0 = opt(1, 0);
+        // %PrepareFunctionForOptimization(opt);
+        // let jit_a0_1 = opt(1, 0);
+        // opt(1, 0);
+        // %OptimizeFunctionOnNextCall(opt)
+        // let jit_a2 = opt(1, 0);
+        // if (jit_a0 === undefined && jit_a2 === undefined){
+        //     opt(1, 0);
+        // } else if (deepEquals(jit_a0, jit_a0_0) && deepEquals(jit_a0, jit_a0_1) && !deepEquals(jit_a0, jit_a2)) {
+        //     fuzzilli('FUZZILLI_CRASH', 0);
+        // }
+        """,
 
     ecmaVersion: ECMAScriptVersion.es6,
 
@@ -681,32 +745,119 @@ codePrefix: """
     ],
 
     additionalCodeGenerators: [
-        (ForceJITCompilationThroughLoopGenerator,  5),
-        (ForceTurboFanCompilationGenerator,        5),
-        (ForceMaglevCompilationGenerator,          5),
-        (TurbofanVerifyTypeGenerator,             10),
+        // (ForceJITCompilationThroughLoopGenerator, 5),
+        // (ForceTurboFanCompilationGenerator, 5),
+        // (ForceMaglevCompilationGenerator, 5),
+        // (TurbofanVerifyTypeGenerator, 10),
 
-        (WorkerGenerator,                         10),
-        (GcGenerator,                             10),
+        // (WorkerGenerator, 10),
+        // (GcGenerator, 10),
 
-        (WasmStructGenerator,                     15),
-        (WasmArrayGenerator,                      15),
+        // (WasmStructGenerator, 15),
+        // (WasmArrayGenerator, 15),
     ],
 
     additionalProgramTemplates: WeightedList<ProgramTemplate>([
-        (MapTransitionFuzzer,    1),
-        (ValueSerializerFuzzer,  1),
-        (RegExpFuzzer,           1),
+        // (MapTransitionFuzzer, 1),
+        // (ValueSerializerFuzzer, 1),
+        // (RegExpFuzzer, 1),
     ]),
 
-    disabledCodeGenerators: [],
+    disabledCodeGenerators: [  // Loop
+        "WhileLoopGenerator",
+        "DoWhileLoopGenerator",
+        "SimpleForLoopGenerator",
+        "ComplexForLoopGenerator",
+        "ForInLoopGenerator",
+        "ForOfLoopGenerator",
+        "ForOfWithDestructLoopGenerator",
+        "RepeatLoopGenerator",
+        "LoopBreakGenerator",
+        "ContinueGenerator",
+        // Asynchronous
+        "AsyncFunctionGenerator",
+        "AsyncArrowFunctionGenerator",
+        "AsyncGeneratorFunctionGenerator",
+        "AwaitGenerator",
+        "PromiseGenerator",
+        // Computed
+        // Well-known property access
+        // Class
+        "ClassGenerator",
+        "ClassConstructorGenerator",
+        "ClassDefinitionGenerator",
+        "ClassInstanceComputedPropertyGenerator",
+        "ClassInstanceElementGenerator",
+        "ClassInstanceGetterGenerator",
+        "ClassInstanceMethodGenerator",
+        "ClassInstancePropertyGenerator",
+        "ClassInstanceSetterGenerator",
+        "ClassPrivateInstanceMethodGenerator",
+        "ClassPrivateInstancePropertyGenerator",
+        "ClassPrivateStaticMethodGenerator",
+        "ClassPrivateStaticPropertyGenerator",
+        "ClassStaticComputedPropertyGenerator",
+        "ClassStaticElementGenerator",
+        "ClassStaticGetterGenerator",
+        "ClassStaticInitializerGenerator",
+        "ClassStaticMethodGenerator",
+        "ClassStaticPropertyGenerator",
+        "ClassStaticSetterGenerator",
+        "PrivateMethodCallGenerator",
+        "PrivatePropertyAssignmentGenerator",
+        "PrivatePropertyRetrievalGenerator",
+        "PrivatePropertyUpdateGenerator",
+        "MethodCallGenerator", // , required for 1404607, 1323114
+        "MethodCallWithSpreadGenerator",
+        "ConstructorCallGenerator",
+        "ConstructorCallWithSpreadGenerator",
+        "ConstructorGenerator", //,  required for 1404607
+        "SuperMethodCallGenerator",
+        // Object
+        // "BuiltinObjectInstanceGenerator",
+        // "ObjectWithSpreadGenerator",
+        // "ObjectBuilderFunctionGenerator",
+        "ObjectConstructorGenerator",
+        // "ObjectLiteralComputedMethodGenerator",
+        // "ObjectLiteralComputedPropertyGenerator",
+        // "ObjectLiteralCopyPropertiesGenerator",
+        // "ObjectLiteralElementGenerator",
+        // "ObjectLiteralGenerator",
+        // "ObjectLiteralGetterGenerator",
+        // "ObjectLiteralMethodGenerator",
+        // "ObjectLiteralPropertyGenerator",
+        "ObjectLiteralPrototypeGenerator",
+        // "ObjectLiteralSetterGenerator",
+        // "DestructObjectAndReassignGenerator",
+        // "DestructObjectGenerator",
+        // "PropertyAssignmentGenerator"//, required for 1323114
+        "PrototypeAccessGenerator",
+        "PrototypeOverwriteGenerator",
+        "ProxyGenerator",
+        // RegExp
+        // Function
+        "TrivialFunctionGenerator",
+        "ArrowFunctionGenerator",
+        "GeneratorFunctionGenerator",
+        // Symbol-related
+        "WellKnownPropertyLoadGenerator",
+        "WellKnownPropertyStoreGenerator",
+        // Misc
+        "FunctionCallWithSpreadGenerator",
+        "CallbackPropertyGenerator",
+        "JITFunctionGenerator",
+        "TryCatchGenerator",
+        "ImitationGenerator",
+        "IteratorGenerator",
+    ],
 
     disabledMutators: [],
 
     additionalBuiltins: [
-        "gc"                                            : .function([] => (.undefined | .jsPromise)),
-        "d8"                                            : .object(withProperties: ["test"]),
-        "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
+        "gc": .function([] => (.undefined | .jsPromise)),
+        "d8": .object(withProperties: ["test"]),
+        "Worker": .constructor(
+            [.anything, .object()] => .object(withMethods: ["postMessage", "getMessage"])),
     ],
 
     additionalObjectGroups: [],
