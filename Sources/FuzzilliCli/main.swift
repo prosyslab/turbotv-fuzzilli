@@ -396,8 +396,8 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
 
     /// The mutation fuzzer responsible for mutating programs from the corpus and evaluating the outcome.
     let disabledMutators = Set(profile.disabledMutators)
-    var mutators = WeightedList([
-        // (ExplorationMutator(), 3),
+    var mutators: WeightedList<Mutator> = WeightedList([
+        (ExplorationMutator(), 3),
         (CodeGenMutator(), 2),
         (SpliceMutator(), 2),
         // (ProbingMutator(), 2),
