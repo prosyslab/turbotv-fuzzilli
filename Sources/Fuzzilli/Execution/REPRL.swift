@@ -19,6 +19,7 @@ import libreprl
 /// scripts, but resets the global state in between executions.
 public class REPRL: ComponentBase, ScriptRunner {
     /// Kill and restart the child process after this many script executions
+    private let executable: String
     private let maxExecsBeforeRespawn: Int
 
     /// Commandline arguments for the executable
@@ -48,6 +49,7 @@ public class REPRL: ComponentBase, ScriptRunner {
         executable: String, processArguments: [String], processEnvironment: [String: String],
         maxExecsBeforeRespawn: Int
     ) {
+        self.executable = executable
         self.processArguments = [executable] + processArguments
         self.maxExecsBeforeRespawn = maxExecsBeforeRespawn
         super.init(name: "REPRL")
@@ -90,12 +92,11 @@ public class REPRL: ComponentBase, ScriptRunner {
         if fuzzer.config.enableDiagnostics {
             self.scriptBuffer += script + "\n"
         }
-        let execution = REPRLExecution(from: self)
+        let execution = ScriptExecution()
         let fileManager = FileManager.default
         let currentPath = URL(fileURLWithPath: fileManager.currentDirectoryPath)
-        let filename = String(script.hash) + ".txt"
-        let filepath = currentPath.appendingPathComponent(filename)
-        print(filepath.absoluteString)
+        let filename = String(script.hash) + ".js"
+        let filepath = currentPath.appendingPathComponent("temp").appendingPathComponent(filename)
         do {
             try script.write(to: filepath, atomically: false, encoding: .utf8)
         } catch {
@@ -104,34 +105,45 @@ public class REPRL: ComponentBase, ScriptRunner {
             return execution
         }
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "././d8s-instrumented/1234764/d8")
+        process.executableURL = URL(fileURLWithPath: self.executable)
         process.arguments = ["--allow-natives-syntax", filepath.path]
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
+
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
         do {
             try process.run()
-
             process.waitUntilExit()
 
             let exitCode = process.terminationStatus
             if exitCode == 0 {
-                print("d8 Process success")
+                logger.verbose("d8 Process success")
                 execution.outcome = .succeeded
             } else {
-                print("d8 Process failed with exit code: \(exitCode)")
+                logger.verbose("d8 Process failed with exit code: \(exitCode)")
                 execution.outcome = .failed(Int(exitCode))
             }
         } catch {
-            print("Error running subprocess d8 : \(error)")
+            logger.verbose("Error running subprocess d8 : \(error)")
             execution.outcome = .failed(Int(-1))
         }
 
-        // do {
-        //     try fileManager.removeItem(at: filepath)
-        //     print("Script deleted successfully.")
-        // } catch {
-        //     print("Error deleting script: \(error)")
-        // }
+        execution.stdout = String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        execution.stderr = String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+
+        // read cov.cov from COV_PATH
+        let covFilePath = ProcessInfo.processInfo.environment["COV_PATH"]!
+        let covFile = covFilePath + "/cov.cov"
+        // if cov.cov. is generated
+        if fileManager.fileExists(atPath: covFile) {
+            execution.covout = try! String(contentsOfFile: covFile)
+            do {
+                try fileManager.removeItem(at: URL(fileURLWithPath: covFile))
+            } catch let error {
+                logger.warning(error.localizedDescription)
+            }
+        }
 
         return execution
     }
@@ -218,6 +230,15 @@ public class REPRL: ComponentBase, ScriptRunner {
 
         return execution
     }
+}
+
+class ScriptExecution: Execution {
+    var stdout: String = ""
+    var stderr: String = ""
+    var fuzzout: String = ""
+    var execTime: TimeInterval = 0
+    var covout: String = ""
+    var outcome: ExecutionOutcome = .succeeded
 }
 
 class REPRLExecution: Execution {

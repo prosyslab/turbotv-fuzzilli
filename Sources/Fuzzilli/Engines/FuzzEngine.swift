@@ -50,6 +50,7 @@ public class FuzzEngine: ComponentBase {
             fuzzer.dispatchEvent(fuzzer.events.ValidProgramFound, data: program)
             var isInteresting = false
             if let aspects = fuzzer.evaluator.evaluate(execution) {
+                logger.verbose("Program has aspects: \(aspects)")
                 if fuzzer.config.enableInspection {
                     program.comments.add(
                         "Program may be interesting due to \(aspects)", at: .footer)

@@ -1,74 +1,93 @@
 import Foundation
 
-struct AflgoLikeFuzzingContext {
-    // The number of edges discovered so far
-    var num_edges: UInt32 = 0
-
-    var edges: Set<UInt64> = []
-
-    // If a basic block is reachable to the target, the entry is the float value of the distance
-    var distmap: [UInt64: Double] = [:]
-}
-
 class AflgoLikeProgramOutcome: ProgramAspects {
-    let hits: [UInt64]
+    let edges: Set<Edge>
+    let distance: Double
+    let covers: Bool
+    let interesting: Bool
 
-    init(hits: [UInt64]) {
-        self.hits = hits
+    init(edges: Set<Edge>, distance: Double, covers: Bool, interesting: Bool) {
+        self.edges = edges
+        self.distance = distance
+        self.covers = covers
+        self.interesting = interesting
         super.init(outcome: .succeeded)
     }
+}
 
-    public func distance(by distmap: [UInt64: Double]) -> Double {
-        return hits.compactMap { distmap[$0] }.reduce(0.0, +) / Double(hits.count)
-    }
+struct Edge: Hashable {
+    let src: UInt64
+    let dst: UInt64
 }
 
 public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator {
-    private var context = AflgoLikeFuzzingContext()
+    private var edges: Set<Edge> = []
+    private let distmap: [UInt64: Double]
 
     public init(runner: ScriptRunner, distmapFile: String) {
-        super.init(name: "AflgoLikeProgramCoverageEvaluator")
-
         // read and parse the distmap file
         // for each line, the first is the basic block address and the second is the distance
         // and each is separated by a space
-        let distmap = try! String(contentsOfFile: distmapFile).split(separator: "\n")
-        for line in distmap {
+        let lines = try! String(contentsOfFile: distmapFile).split(separator: "\n")
+        var distances: [UInt64: Double] = [:]
+        for line in lines {
             let parts = line.split(separator: " ")
-            let bb = UInt64(parts[0].split(separator: "x")[1], radix: 16)!
+            let bb = UInt64(parts[0].dropFirst(2), radix: 16)!
             let distance = Double(parts[1])!
-            context.distmap[bb] = distance
+            distances[bb] = distance
+        }
+        self.distmap = distances
+
+        super.init(name: "AflgoLikeProgramCoverageEvaluator")
+
+        for (block, distance) in self.distmap {
+            logger.verbose("Block: \(String(format: "%#llx", block)), Distance: \(distance)")
         }
     }
 
     public func evaluate(_ execution: Execution) -> ProgramAspects? {
-
         assert(execution.outcome == .succeeded)
-
-        // read COV_PATH from the environment
-        let covFilePath = ProcessInfo.processInfo.environment["COV_PATH"]!
-        // read 'cov.cov' file which contains the coverage information
-        // each line is a hex number representing a basic block hit
-        let covFile = covFilePath + "/cov.cov"
-        print("hi0")
-        guard let covData = try? Data(contentsOf: URL(fileURLWithPath: covFile)) else {
-            return nil
+        // assert execution is ScriptExecution
+        assert (execution is ScriptExecution)
+        let covData = (execution as! ScriptExecution).covout
+        let covLines = covData.split(separator: "\n")
+        logger.verbose("\(covLines.count) lines of coverage data")
+        let blockHits =
+            covLines
+              .map {
+                UInt64($0.dropFirst(2), radix: 16)! } // drop 0x prefix
+              .filter { distmap[$0] != nil } // filter out blocks not in distmap
+        
+        // if there is a hit of distance 0, we have reached the target
+        let covers = blockHits.contains(where: { distmap[$0] == 0 })
+        if covers {
+            logger.verbose("Covering input found")
         }
-        print("hello")
-        let covLines = covData.split(separator: 0x0A)
+        
+        let edges = zip(blockHits, blockHits.dropFirst()).map { Edge(src: $0, dst: $1) }
 
-        // convert the hex numbers to UInt64
-        let hits = covLines.map { UInt64(strtoul(String(decoding: $0, as: UTF8.self), nil, 16)) }
-        // print(hits)
-        let outcome = AflgoLikeProgramOutcome(hits: hits)
-        let fileManager: FileManager = FileManager.default
-        do {
-            try fileManager.removeItem(at: URL(fileURLWithPath: covFile))
-            print("hello2")
-        } catch let error {
-            print(error.localizedDescription)
+        // check if a new edge is found
+        let newEdges = Set(edges).subtracting(self.edges)
+        self.edges.formUnion(newEdges)
+
+        let uniqueHits = Set(blockHits)
+        let allWeights = uniqueHits.compactMap { distmap[$0] }
+        var distance = 65535.0
+        if !allWeights.isEmpty {
+            distance = allWeights.reduce(0.0, +) / Double(allWeights.count)
         }
+
+        let outcome = AflgoLikeProgramOutcome(edges: Set(edges), distance: distance, covers: covers, interesting: !newEdges.isEmpty)
+        logger.verbose("Evaluated \(covers ? "Covering" : "Non-covering") program of \(newEdges.count) new edges with distance \(distance)")
+
         return outcome
+    }
+
+    public func dispatchEvent<T>(_ event: Event<T>, data: T) {
+        // dispatchPrecondition(condition: .onQueue(queue))
+        for listener in event.listeners {
+            listener(data)
+        }
     }
 
     public func evaluateCrash(_ execution: Execution) -> ProgramAspects? {
@@ -83,7 +102,7 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
     }
 
     public var currentScore: Double {
-        return Double(context.num_edges) / Double(context.distmap.count)
+        return Double(self.edges.count) / Double(self.distmap.count)
     }
 
     public func exportState() -> Data {
@@ -98,20 +117,23 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
 
     }
 
+    // Used to determine if re-running results in the same outcome
+    // No use for our purposes
     public func computeAspectIntersection(of program: Program, with aspects: ProgramAspects)
         -> ProgramAspects?
     {
-        let execution = fuzzer.execute(program, purpose: .checkForDeterministicBehavior)
-        guard execution.outcome == .succeeded else { return nil }
-        guard let secondOutcome = evaluate(execution) as? AflgoLikeProgramOutcome else {
-            return nil
-        }
+        return aspects
+        // let execution = fuzzer.execute(program, purpose: .checkForDeterministicBehavior)
+        // guard execution.outcome == .succeeded else { return nil }
+        // guard let secondOutcome = evaluate(execution) as? AflgoLikeProgramOutcome else {
+        //     return nil
+        // }
 
-        let firstHits: Set<UInt64> = Set((aspects as! AflgoLikeProgramOutcome).hits)
-        let secondHits: Set<UInt64> = Set(secondOutcome.hits)
+        // let firstHits: Set<UInt64> = Set((aspects as! AflgoLikeProgramOutcome).hits)
+        // let secondHits: Set<UInt64> = Set(secondOutcome.hits)
 
-        let intersectedHits = secondHits.intersection(firstHits)
-        guard intersectedHits.count > 0 else { return nil }
-        return AflgoLikeProgramOutcome(hits: Array(intersectedHits))
+        // let intersectedHits = secondHits.intersection(firstHits)
+        // guard intersectedHits.count > 0 else { return nil }
+        // return AflgoLikeProgramOutcome(hits: Array(intersectedHits))
     }
 }

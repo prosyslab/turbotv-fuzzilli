@@ -77,6 +77,7 @@ public class MutationEngine: FuzzEngine {
     /// This ensures that samples will be mutated multiple times as long
     /// as the intermediate results do not cause a runtime exception.
     public override func fuzzOne(_ group: DispatchGroup) {
+        logger.verbose("A fuzzing round started.")
         var parent = fuzzer.corpus.randomElementForMutating()
         parent = prepareForMutating(parent)
         for _ in 0..<numConsecutiveMutations {

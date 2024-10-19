@@ -20,6 +20,7 @@ public class Storage: Module {
     private let crashesDir: String
     private let duplicateCrashesDir: String
     private let corpusDir: String
+    private let coversDir: String
     private let statisticsDir: String
     private let stateFile: String
     private let failedDir: String
@@ -36,6 +37,7 @@ public class Storage: Module {
         self.crashesDir = storageDir + "/crashes"
         self.duplicateCrashesDir = storageDir + "/crashes/duplicates"
         self.corpusDir = storageDir + "/corpus"
+        self.coversDir = storageDir + "/covers"
         self.failedDir = storageDir + "/failed"
         self.timeOutDir = storageDir + "/timeouts"
         self.statisticsDir = storageDir + "/stats"
@@ -53,6 +55,7 @@ public class Storage: Module {
             try FileManager.default.createDirectory(atPath: crashesDir, withIntermediateDirectories: true)
             try FileManager.default.createDirectory(atPath: duplicateCrashesDir, withIntermediateDirectories: true)
             try FileManager.default.createDirectory(atPath: corpusDir, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(atPath: coversDir, withIntermediateDirectories: true)
             try FileManager.default.createDirectory(atPath: statisticsDir, withIntermediateDirectories: true)
             if fuzzer.config.enableDiagnostics {
                 try FileManager.default.createDirectory(atPath: failedDir, withIntermediateDirectories: true)
@@ -98,6 +101,12 @@ public class Storage: Module {
         fuzzer.registerEventListener(for: fuzzer.events.InterestingProgramFound) { ev in
             let filename = "program_\(self.formatDate())_\(ev.program.id)"
             self.storeProgram(ev.program, as: filename, in: self.corpusDir)
+        }
+
+        fuzzer.registerEventListener(for: fuzzer.events.CoveringProgramFound) { ev in
+            self.logger.info("Saving covering program to disk")
+            let filename = "program_\(self.formatDate())_\(ev.id)"
+            self.storeProgram(ev, as: filename, in: self.coversDir)
         }
 
         if fuzzer.config.enableDiagnostics {

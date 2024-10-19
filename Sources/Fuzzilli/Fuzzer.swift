@@ -417,6 +417,7 @@ public class Fuzzer {
             var imported = false
             if let aspects = evaluator.evaluate(execution) {
                 imported = processMaybeInteresting(program, havingAspects: aspects, origin: origin)
+                logger.verbose("\(imported ? "Imported" : "Discarded") program with aspects: \(aspects)")
             }
             if case .corpusImport(let mode) = origin, mode == .full, !imported {
                 // We're performing a full corpus import, so the sample still needs to be added to our corpus even though it doesn't trigger any new behaviour.
@@ -508,6 +509,7 @@ public class Fuzzer {
         return execution
     }
 
+    /// NOTE: process probably interesting program (only valid ones)
     /// Process a program that appears to have interesting aspects.
     /// This function will first determine which (if any) of the interesting aspects are triggered reliably, then schedule the program for minimization and inclusion in the corpus.
     /// Returns true if this program was interesting (i.e. had at least some interesting aspects that are triggered reliably), false if not.
@@ -515,34 +517,44 @@ public class Fuzzer {
     func processMaybeInteresting(
         _ program: Program, havingAspects aspects: ProgramAspects, origin: ProgramOrigin
     ) -> Bool {
+        // If the program is not interesting, under AFLGo-like configuration, we discard it
+        if let aflgoLike = aspects as? AflgoLikeProgramOutcome {
+            if aflgoLike.covers {
+                dispatchEvent(events.CoveringProgramFound, data: program)
+            }
+            if !aflgoLike.interesting {
+                return false
+            }
+            logger.verbose("Processing interesting program!")
+        }
         var aspects = aspects
 
         // Determine which (if any) aspects of the program are triggered deterministially.
         // For that, the sample is executed at a few more times and the intersection of the interesting aspects of each execution is computed.
         // Once that intersection is stable, the remaining aspects are considered to be triggered deterministic.
-        let minAttempts = 5
-        let maxAttempts = 50
-        var didConverge = false
-        var attempt = 0
-        repeat {
-            attempt += 1
-            if attempt > maxAttempts {
-                logger.warning(
-                    "Sample did not converage after \(maxAttempts) attempts. Discarding it")
-                return false
-            }
+        // let minAttempts = 5
+        // let maxAttempts = 50
+        // var didConverge = false
+        // var attempt = 0
+        // repeat {
+        //     attempt += 1
+        //     if attempt > maxAttempts {
+        //         logger.warning(
+        //             "Sample did not converage after \(maxAttempts) attempts. Discarding it")
+        //         return false
+        //     }
 
-            guard let intersection = evaluator.computeAspectIntersection(of: program, with: aspects)
-            else {
-                // This likely means that no aspects are triggered deterministically, so discard this sample.
-                return false
-            }
+        //     guard let intersection = evaluator.computeAspectIntersection(of: program, with: aspects)
+        //     else {
+        //         // This likely means that no aspects are triggered deterministically, so discard this sample.
+        //         return false
+        //     }
 
-            // Since evaluateAndIntersect will only ever return aspects that are equivalent to, or a subset of,
-            // the provided aspects, we can check if they are identical by comparing their sizes
-            didConverge = aspects.count == intersection.count
-            aspects = intersection
-        } while !didConverge || attempt < minAttempts
+        //     // Since evaluateAndIntersect will only ever return aspects that are equivalent to, or a subset of,
+        //     // the provided aspects, we can check if they are identical by comparing their sizes
+        //     didConverge = aspects.count == intersection.count
+        //     aspects = intersection
+        // } while !didConverge || attempt < minAttempts
 
         if origin == .local {
             iterationOfLastInteratingSample = iterations
@@ -551,6 +563,7 @@ public class Fuzzer {
         // Determine whether the program needs to be minimized, then, using this helper function, dispatch the appropriate
         // event and insert the sample into the corpus.
         func finishProcessing(_ program: Program) {
+            logger.verbose("Finish Processing")
             if config.enableInspection {
                 if origin == .local {
                     program.comments.add("Program is interesting due to \(aspects)", at: .footer)
@@ -568,19 +581,22 @@ public class Fuzzer {
             }
         }
 
-        if !origin.requiresMinimization() {
-            finishProcessing(program)
-        } else {
-            // Minimization should be performed as part of the fuzzing dispatch group. This way, the next fuzzing iteration
-            // will only start once the curent sample has been fully processed and inserted into the corpus.
-            fuzzGroup.enter()
-            minimizer.withMinimizedCopy(
-                program, withAspects: aspects, limit: config.minimizationLimit
-            ) { minimizedProgram in
-                self.fuzzGroup.leave()
-                finishProcessing(minimizedProgram)
-            }
-        }
+        finishProcessing(program)
+
+        // if !origin.requiresMinimization() {
+        //     finishProcessing(program)
+        // } else {
+        //     logger.verbose("Minimizing interesting program")
+        //     // Minimization should be performed as part of the fuzzing dispatch group. This way, the next fuzzing iteration
+        //     // will only start once the curent sample has been fully processed and inserted into the corpus.
+        //     fuzzGroup.enter()
+        //     minimizer.withMinimizedCopy(
+        //         program, withAspects: aspects, limit: config.minimizationLimit
+        //     ) { minimizedProgram in
+        //         self.fuzzGroup.leave()
+        //         finishProcessing(minimizedProgram)
+        //     }
+        // }
         return true
     }
 
@@ -681,6 +697,7 @@ public class Fuzzer {
             }
 
         case .corpusImport:
+            logger.verbose("Corpus import iteration \(iterations)")
             assert(!currentCorpusImportJob.isFinished)
             let program = currentCorpusImportJob.nextProgram()
 
@@ -711,6 +728,7 @@ public class Fuzzer {
             }
 
         case .corpusGeneration:
+            logger.verbose("Corpus generation iteration \(iterations)")
             // We should never perform corpus generation if we're using a static corpus.
             assert(!config.staticCorpus)
 
