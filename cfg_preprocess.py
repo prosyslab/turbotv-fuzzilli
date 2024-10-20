@@ -9,7 +9,6 @@ from collections import defaultdict
 
 parser = argparse.ArgumentParser()
 parser.add_argument("cfg_dir", help="directory of CFG files and callgraph.txt")
-parser.add_argument('targets_file', help="file containing <target_file>:<target_line> pairs")
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -19,10 +18,11 @@ logging.basicConfig(
 )
 
 cfg_dir = Path(args.cfg_dir)
+targets_file = cfg_dir / 'target-blocks.txt'
 
 targets = []
 
-for line in open(args.targets_file):
+for line in open(targets_file):
     target_file, target_line = line.strip().split(':')
     target_line = int(target_line)
     targets.append((target_file, target_line))
@@ -116,8 +116,9 @@ for v in target_nodes:
         fulldistmap[n].append(distance)
 
 for n, distances in fulldistmap.items():
-    bbid = n[4:]
+    bbid = n[4:] # remove 'Node' prefix
     # compute harmonic mean
+    logging.info(f'{bbid}, {distances}')
     if 0 not in distances:
         harmonic_mean = len(distances) / sum([1/d for d in distances])
         print(f'{bbid} {harmonic_mean}')
