@@ -399,7 +399,7 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
     var mutators: WeightedList<Mutator> = WeightedList([
         (ExplorationMutator(), 3),
         (CodeGenMutator(), 2),
-        (SpliceMutator(), 2),
+        // (SpliceMutator(), 2),
         // (ProbingMutator(), 2),
         (InputMutator(isTypeAware: false), 2),
         (InputMutator(isTypeAware: true), 1),

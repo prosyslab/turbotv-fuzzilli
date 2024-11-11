@@ -50,7 +50,7 @@ def parse_cfg(cfg_file):
     # set edge weight as 1
     for u, v, k, d in graph.edges(keys=True, data=True):
         d['weight'] = 1
-    
+
     for n, d in graph.nodes(data=True):
         label = d['label'].strip('{}"')
         filename, funcname, lineno, order = label.split(':')

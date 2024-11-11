@@ -48,22 +48,25 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
     public func evaluate(_ execution: Execution) -> ProgramAspects? {
         assert(execution.outcome == .succeeded)
         // assert execution is ScriptExecution
-        assert (execution is ScriptExecution)
+        assert(execution is ScriptExecution)
         let covData = (execution as! ScriptExecution).covout
         let covLines = covData.split(separator: "\n")
+
         logger.verbose("\(covLines.count) lines of coverage data")
+        // print(covLines)
         let blockHits =
             covLines
-              .map {
-                UInt64($0.dropFirst(2), radix: 16)! } // drop 0x prefix
-              .filter { distmap[$0] != nil } // filter out blocks not in distmap
-        
+            .map {
+                UInt64($0.dropFirst(2), radix: 16)!
+            }  // drop 0x prefix
+            .filter { distmap[$0] != nil }  // filter out blocks not in distmap
+        // print(blockHits)
         // if there is a hit of distance 0, we have reached the target
         let covers = blockHits.contains(where: { distmap[$0] == 0 })
         if covers {
             logger.verbose("Covering input found")
         }
-        
+
         let edges = zip(blockHits, blockHits.dropFirst()).map { Edge(src: $0, dst: $1) }
 
         // check if a new edge is found
@@ -77,8 +80,11 @@ public class AflgoLikeProgramCoverageEvaluator: ComponentBase, ProgramEvaluator 
             distance = allWeights.reduce(0.0, +) / Double(allWeights.count)
         }
 
-        let outcome = AflgoLikeProgramOutcome(edges: Set(edges), distance: distance, covers: covers, interesting: !newEdges.isEmpty)
-        logger.verbose("Evaluated \(covers ? "Covering" : "Non-covering") program of \(newEdges.count) new edges with distance \(distance)")
+        let outcome = AflgoLikeProgramOutcome(
+            edges: Set(edges), distance: distance, covers: covers, interesting: !newEdges.isEmpty)
+        logger.verbose(
+            "Evaluated \(covers ? "Covering" : "Non-covering") program of \(newEdges.count) new edges with distance \(distance)"
+        )
 
         return outcome
     }

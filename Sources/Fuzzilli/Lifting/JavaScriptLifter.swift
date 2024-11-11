@@ -1737,7 +1737,7 @@ public class JavaScriptLifter: Lifter {
                 pendingExpressions.removeFirst(numExpressionsToEmit)
             }
             pendingExpressions.removeLast(matchingSuffixLength)
-
+            var idxArray: [Int] = []
             for v in queriedVariables {
                 guard let expression = expressions[v] else {
                     fatalError("Don't have an expression for variable \(v)")
@@ -1751,10 +1751,16 @@ public class JavaScriptLifter: Lifter {
                             expression.text[
                                 expression.text.index(after: expression.text.startIndex)...])
                         {
+                            idxArray.append(idx)
                             // change here to adjust parameter frequency
-                            if idx <= 40 {
-                                return expression.change_text(text: "p\(idx%2)")
+                            if Int.random(in: 0...2) == 0 {
+                                let randomIdx = idxArray.randomElement() ?? idx
+                                return expression.change_text(
+                                    text: "v\(randomIdx)")
+                            } else {
+                                return expression.change_text(text: "p\(Int.random(in:0...1))")
                             }
+
                         }
                     }
                     return expression

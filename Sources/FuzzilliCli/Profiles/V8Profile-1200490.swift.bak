@@ -654,7 +654,7 @@ let v8Profile = Profile(
         let before = opt(false, false);
         // let before = opt(1, 0);
         %OptimizeFunctionOnNextCall(opt);
-        let after = opt(false, false);
+        let after = opt(true, true);
         //let after = opt(1, 0);
         console.log("before");
         console.log(before);
@@ -803,7 +803,6 @@ let v8Profile = Profile(
         "ApiFunctionCallGenerator",
         "FunctionCallGenerator",
     ],
-
     disabledMutators: [],
 
     additionalBuiltins: [

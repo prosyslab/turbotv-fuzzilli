@@ -644,22 +644,23 @@ let v8Profile = Profile(
     // """,
 
     codePrefix: """
-        
         function opt(p0, p1){
         """,
 
     codeSuffix: """
         }
-         %PrepareFunctionForOptimization(opt);
-        let before = opt(false, false);
-        // let before = opt(1, 0);
+        %PrepareFunctionForOptimization(opt);
+        opt(1, 0);
         %OptimizeFunctionOnNextCall(opt);
-        let after = opt(false, false);
-        //let after = opt(1, 0);
+        function foo() {
+        return opt(0, 1);
+        }
+        %PrepareFunctionForOptimization(foo);
         console.log("before");
-        console.log(before);
+        console.log(foo());
+        %OptimizeFunctionOnNextCall(foo);
         console.log("after");
-        console.log(after);
+        console.log(foo());
         """,
 
     ecmaVersion: ECMAScriptVersion.es6,

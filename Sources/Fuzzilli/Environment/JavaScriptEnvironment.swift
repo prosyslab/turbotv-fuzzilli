@@ -332,12 +332,12 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // selectively disable methods/properties by commenting out parts of the ObjectGroup and
         // Type definitions at the end of this file.
         registerObjectGroup(.jsStrings)
-        registerObjectGroup(.jsArrays)
+        // registerObjectGroup(.jsArrays)
         registerObjectGroup(.jsArguments)
         // registerObjectGroup(.jsGenerators)
         // registerObjectGroup(.jsPromises)
         // registerObjectGroup(.jsRegExps)
-        registerObjectGroup(.jsFunctions)
+        // registerObjectGroup(.jsFunctions)
         // registerObjectGroup(.jsSymbols)
         // registerObjectGroup(.jsMaps)
         // registerObjectGroup(.jsWeakMaps)
@@ -345,19 +345,19 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // registerObjectGroup(.jsWeakSets)
         // registerObjectGroup(.jsWeakRefs)
         // registerObjectGroup(.jsFinalizationRegistrys)
-        registerObjectGroup(.jsArrayBuffers)
+        // registerObjectGroup(.jsArrayBuffers)
         // registerObjectGroup(.jsSharedArrayBuffers)
-        for variant in [
-            "Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array",
-            "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array",
-        ] {
-            registerObjectGroup(.jsTypedArrays(variant))
-        }
+        // for variant in [
+        //     "Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array",
+        //     "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array",
+        // ] {
+        //     registerObjectGroup(.jsTypedArrays(variant))
+        // }
         // registerObjectGroup(.jsDataViews)
 
-        registerObjectGroup(.jsObjectConstructor)
+        // registerObjectGroup(.jsObjectConstructor)
         // registerObjectGroup(.jsPromiseConstructor)
-        registerObjectGroup(.jsArrayConstructor)
+        // registerObjectGroup(.jsArrayConstructor)
         registerObjectGroup(.jsStringConstructor)
         // registerObjectGroup(.jsSymbolConstructor)
         registerObjectGroup(.jsBigIntConstructor)
@@ -384,9 +384,9 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         // Register builtins that should be available for fuzzing.
         // Here it is easy to selectively disable/enable some APIs for fuzzing by
         // just commenting out the corresponding lines.
-        registerBuiltin("Object", ofType: .jsObjectConstructor)
-        registerBuiltin("Array", ofType: .jsArrayConstructor)
-        registerBuiltin("Function", ofType: .jsFunctionConstructor)
+        // registerBuiltin("Object", ofType: .jsObjectConstructor)
+        // registerBuiltin("Array", ofType: .jsArrayConstructor)
+        // registerBuiltin("Function", ofType: .jsFunctionConstructor)
         registerBuiltin("String", ofType: .jsStringConstructor)
         registerBuiltin("Boolean", ofType: .jsBooleanConstructor)
         registerBuiltin("Number", ofType: .jsNumberConstructor)
@@ -400,14 +400,14 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         //     registerBuiltin(variant, ofType: .jsErrorConstructor(variant))
         // }
         // registerBuiltin("ArrayBuffer", ofType: .jsArrayBufferConstructor)
-        registerBuiltin("SharedArrayBuffer", ofType: .jsSharedArrayBufferConstructor)
-        for variant in [
-            "Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array",
-            "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array",
-        ] {
-            registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
-        }
-        registerBuiltin("DataView", ofType: .jsDataViewConstructor)
+        // registerBuiltin("SharedArrayBuffer", ofType: .jsSharedArrayBufferConstructor)
+        // for variant in [
+        //     "Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array",
+        //     "Float32Array", "Float64Array", "Uint8ClampedArray", "BigInt64Array", "BigUint64Array",
+        // ] {
+        //     registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
+        // }
+        // registerBuiltin("DataView", ofType: .jsDataViewConstructor)
         // registerBuiltin("Date", ofType: .jsDateConstructor)
         // registerBuiltin("Promise", ofType: .jsPromiseConstructor)
         // registerBuiltin("Proxy", ofType: .jsProxyConstructor)

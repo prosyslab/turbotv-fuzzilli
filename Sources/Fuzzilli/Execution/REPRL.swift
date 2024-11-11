@@ -104,9 +104,13 @@ public class REPRL: ComponentBase, ScriptRunner {
             execution.outcome = .failed(Int(-1))
             return execution
         }
+        // print(script)
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: self.executable)
-        process.arguments = ["--allow-natives-syntax", filepath.path]
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/timeout")
+        // print(self.executable)
+        process.arguments = [
+            "-s", "9", "3s", self.executable, "--allow-natives-syntax", filepath.path,
+        ]
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -117,7 +121,8 @@ public class REPRL: ComponentBase, ScriptRunner {
             process.waitUntilExit()
 
             let exitCode = process.terminationStatus
-            if exitCode == 0 {
+            if exitCode == 0 || exitCode == 133 {
+                // print("success")
                 logger.verbose("d8 Process success")
                 execution.outcome = .succeeded
             } else {
@@ -129,8 +134,12 @@ public class REPRL: ComponentBase, ScriptRunner {
             execution.outcome = .failed(Int(-1))
         }
 
-        execution.stdout = String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        execution.stderr = String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        execution.stdout =
+            String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+            ?? ""
+        execution.stderr =
+            String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+            ?? ""
 
         // read cov.cov from COV_PATH
         let covFilePath = ProcessInfo.processInfo.environment["COV_PATH"]!

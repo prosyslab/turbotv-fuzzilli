@@ -44,11 +44,11 @@ public class BaseInstructionMutator: Mutator {
         for instr in program.code {
             if canMutate(instr) {
                 candidates.append(instr.index)
-                if program.importants.contains(instr) {
-                    // print("importants added")
-                    candidates.append(instr.index)
-                    candidates.append(instr.index)
-                }
+                // if program.importants.contains(instr) {
+                //     // print("importants added")
+                //     candidates.append(instr.index)
+                //     candidates.append(instr.index)
+                // }
             }
         }
 

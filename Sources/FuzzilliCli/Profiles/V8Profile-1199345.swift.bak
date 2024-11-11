@@ -644,21 +644,21 @@ let v8Profile = Profile(
     // """,
 
     codePrefix: """
-        
         function opt(p0, p1){
         """,
 
     codeSuffix: """
         }
+        let before_ = Object.is(opt(false), -0);
          %PrepareFunctionForOptimization(opt);
-        let before = opt(false, false);
+        let before = opt(true, true);
         // let before = opt(1, 0);
         %OptimizeFunctionOnNextCall(opt);
-        let after = opt(false, false);
+        let after = Object.is(opt(false,false), -0);
         //let after = opt(1, 0);
-        console.log("before");
-        console.log(before);
-        console.log("after");
+        console.log("before:" before_);
+        console.log(before_);
+        console.log("after": after);
         console.log(after);
         """,
 
